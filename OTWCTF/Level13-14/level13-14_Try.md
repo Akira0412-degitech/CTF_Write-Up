@@ -12,9 +12,9 @@ Q.The password for the next level is stored in /etc/bandit_pass/bandit14 and can
 
 4. **Logout**
 
-5. **Fix Key permissions**
+5. **Download the file into local using scp command**
 
-`chmod 600 sshkey.private`
+`scp -P 2220 bandit13@bandit.labs.overthewire.org:sshkey.private .`
 
 6. **Login using the private key**
 
