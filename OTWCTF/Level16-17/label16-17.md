@@ -73,3 +73,6 @@ The credentials for the next level can be retrieved by submitting the password o
 - Only one port in the 31000–32000 range supports SSL/TLS.  
 - When using `openssl s_client`, the `-quiet` option prevents OpenSSL from interpreting password input as commands (like `KEYUPDATE`).  
 - The server returns an RSA private key instead of a plain password; this key must be saved locally and used with SSH to log in as Bandit17.
+
+# Reference 
+https://ja.linux-console.net/?p=19689
