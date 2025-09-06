@@ -22,6 +22,6 @@ Use `cat` to read the file and `nc` (netcat) to send it to a specific port.
 The pipe `|`sends the output of one command into another.
 `nc localhost 30000` opens a TCP connection to port `30000` on the same machine.
 
-# Flag
+## Flag
 `8xCjnmgoKbGLhHFAZlGE5Tmu4M2tKJQo`
 
