@@ -1,17 +1,17 @@
-## Level 17 → 18
+# Level 17 → 18
 
-### Question  
+## Question  
 There are two files in the home directory: `passwords.old` and `passwords.new`.  
 The password for the next level is stored in `passwords.new` and is the only line that has been changed compared to `passwords.old`.
 
 ---
 
-### Key Idea  
+## Key Idea  
 Use the `diff` command to compare both files and identify the single changed line, which contains the next level’s password.
 
 ---
 
-### Process  
+## Process  
 
 1. **Research on `diff` command**  
    - The `diff` command compares two files line by line.  
