@@ -3,12 +3,13 @@
 How about some hide and seek?
 
 # Process
-1. **Extract zip**
+1. **Extract zip**  
    First, extract the provided file:
    ```bash
    unzip unknown.zip
    ```
-2. **Identify the File Type**
+     
+2. **Identify the File Type**  
    Check the extracted file:
    ```bash
    file ukn_reality.jpg
@@ -17,8 +18,8 @@ How about some hide and seek?
    ```bash
    ukn_reality.jpg: JPEG image data, JFIF standard 1.01, resolution (DPI), density 72x72, segment length 16, baseline, precision 8, 4308x2875, components 3
    ```
-   Confirms the file is a JPEG image.
-3. **Inspect Metadata**
+   Confirms the file is a JPEG image.  
+4. **Inspect Metadata**    
     Since JPEGs often contain metadata, run:
      ```bash
      exiftool ukn_reality.jpg
@@ -29,7 +30,7 @@ How about some hide and seek?
      ```
      The suspicious string looks like Base64.
 
-4. **Decode the Hidden String**
+5. **Decode the Hidden String**  
    Decode the Base64 value:
    ```bash
    echo "cGljb0NURntNRTc0RDQ3QV9ISUREM05fZGVjYTA2ZmJ9Cg==" | base64 -d
@@ -37,7 +38,7 @@ How about some hide and seek?
    Output:
    ```bash
    picoCTF{ME74D47A_HIDD3N_deca06fb}
-   ```
+   ```  
 # Key Idea
 In forensics challenges, flags are often hidden in file metadata.  
 Tools like exiftool reveal custom fields (e.g., "Attribution URL").  
