@@ -24,10 +24,10 @@ Additional details will be available after launching your challenge instance.
 Since the cookie value appeared to be Base64, I wrote a short Python script to decode it:
 
 # Keyidea
-# The challenge is not about login vulnerabilities,
-# but about inspecting cookies.
-# The hidden "secret_recipe" cookie contains the flag,
-# encoded with Base64. Decode it to retrieve the flag.
+The challenge is not about login vulnerabilities,  
+but about inspecting cookies.  
+The hidden "secret_recipe" cookie contains the flag,  
+encoded with Base64. Decode it to retrieve the flag.  
 
 # Reference
 https://qiita.com/gaku-devlog/items/d1b290e6b55ec530770d
