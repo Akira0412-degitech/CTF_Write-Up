@@ -1,4 +1,4 @@
-# GET aHEAD (Web exploitation) - PicoCTF
+# GET aHEAD - PicoCTF (Web Exploitation)
 
 # Question
 Find the flag being held on this server to get ahead of the competition http://mercury.picoctf.net:53554/
