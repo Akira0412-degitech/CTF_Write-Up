@@ -127,12 +127,13 @@ flag{Than5s_f0r_play1ng_H0p£_y0u_enJ053d}
 ## 🏁 4. Conclusion & Key Takeaways
 ### 🔐 Security Lessons
 
-• Information Leakage: Sensitive directories like `/etc` should never be accessible via a web server.
+- Don't Leave Secret Doors Open: The biggest mistake was letting the public see the /etc folder on the website. Important files and password hashes should always be hidden away in a safe place, not left where anyone can find them.
 
-• Weak Credential Management: Archive passwords must be complex to resist dictionary-based cracking.
+- Pick Stronger Passwords: Using a common word like squidward is like using a physical key that everyone has a copy of. Even good encryption (like Borg Backup) can't protect you if your password is easy to guess with a dictionary attack.
 
-• Insecure Code Execution: Custom scripts running with `sudo` must never execute user-supplied input directly.
+- Be Careful with "Superuser" Scripts: The backup.sh script was dangerous because it trusted the user too much. If you give a script the power to run as root (the boss of the computer), it must be programmed to strictly follow rules and not just run whatever the user types in.
 
+- Notes are for Humans, not Passwords: Writing down passwords in a note.txt file is a very common but risky habit. It only takes one small slip-up for an attacker to find that note and walk right into the system.
 ---
 
 ✍️ Author: Akira Hasuo
