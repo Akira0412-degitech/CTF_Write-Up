@@ -117,6 +117,11 @@ sudo /etc/mp3backups/backup.sh -c 'chmod +s /bin/bash'
 
 Status: Root access obtained.
 
+root.txt:
+```
+flag{Than5s_f0r_play1ng_H0p£_y0u_enJ053d}
+```
+
 ---
 
 ## 🏁 4. Conclusion & Key Takeaways
