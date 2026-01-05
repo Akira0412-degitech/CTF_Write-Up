@@ -1,95 +1,135 @@
-CTF Write-up: Cyborg (TryHackMe)
-1. Introduction
-Hi there! Today we're looking at Cyborg, a beginner-friendly room on TryHackMe. This box is great for learning how to move from web enumeration to cracking encrypted backups and eventually exploiting a script to get root access.
+# 🛡️ TryHackMe – Cyborg
+Full Technical Walkthrough & Detailed Write-up
 
-2. Scouting the Target (Reconnaissance)
-Every hack starts with looking around. I used a tool called `rustscan` to see which "doors" (ports) were open on the machine.
+  
 
-The Scan:
+---
+
+## 📌 Overview
+Room Name: Cyborg
+
+Platform: TryHackMe
+
+Difficulty: Easy
+
+Category: Web / Archive Analysis / Privilege Escalation
+
+This challenge involves a series of steps starting from web enumeration, hash cracking, and analyzing a Borg Backup repository, ultimately leading to root access via a command injection vulnerability in a custom script.
+
+---
+
+## 🔍 1. Enumeration Phase
+### 🔎 Service Scanning
+
+The initial reconnaissance was performed using `rustscan` to identify open ports on the target machine.
 
 ```
 
-rustscan -a <IP_ADDRESS>
+rustscan -a <TARGET_IP>
 
 ```
 
 Results:
 
-• Port 22 (SSH): For remote login.
+• 22/tcp: SSH
 
-• Port 80 (HTTP): A web server is running.
+• 80/tcp: HTTP (Apache2 default page)
 
-Since there's a web server, I checked it out in my browser. It looked like a standard Apache page, so I used `gobuster` to find hidden folders.
+### 🌐 Web Directory Discovery
 
-Hidden Folders Found:
-
-• `/admin`: I found a "Shoutbox" where a user named Alex was chatting about an insecure proxy.
-
-• `/etc`: This is a goldmine! I found a `passwd` file with a scrambled password (hash) and a `squid.conf` file.
-
-3. Breaking In (Exploitation)
-Cracking the Hash
-
-The password hash looked like this: `music_archive:$apr1$BpZ.Q.1m$...` Using a tool called `hashcat` and a list of common passwords (`rockyou.txt`), I was able to "un-scramble" it.
-
-• Cracked Password: `squidward`
-
-Exploring the Backup
-
-I found a file called `archive.tar` in the admin area. After downloading it, I realized it was a Borg Backup. Borg is a tool that encrypts and compresses files. I used the password I just cracked to look inside:
+As the root page was a default Apache installation, `gobuster` was used to uncover hidden directories.
 
 ```
 
-borg extract ./path/to/archive::music_archive
+gobuster dir -u http://<TARGET_IP> -w /usr/share/wordlists/dirb/big.txt -x php -t 50
 
 ```
 
-Inside the backup, I found a note in Alex's documents:
+Key Findings:
+
+• `/admin`: Contained a "Shoutbox" where a user named Alex mentioned insecure squid proxy settings.
+
+• `/etc`: Revealed a `passwd` file containing a hash and a `squid.conf` configuration file.
+
+---
+
+## 🔓 2. Initial Access
+### 🔑 Hash Cracking
+
+The hash extracted from `/etc/passwd` was:
+
+`music_archive:$apr1$BpZ.Q.1m$F0qqPwHSOG50URuOVQTTn.`
+
+Using `hashcat` with the Apache $apr1$ MD5 mode (1600), the password was recovered:
+
+```
+
+hashcat '$apr1$BpZ.Q.1m$F0qqPwHSOG50URuOVQTTn.' /usr/share/wordlists/rockyou.txt -m 1600
+
+```
+
+• Result: `squidward`
+
+### 📦 Borg Backup Extraction
+
+A file named `archive.tar` was downloaded from the `/admin` page. After extraction, it was identified as a Borg Backup repository. Using the cracked password, I extracted the contents:
+
+```
+
+borg extract ./home/field/dev/final_archive::music_archive
+
+```
+
+Inside the extracted files, `note.txt` revealed Alex's SSH credentials:
 
 • User: `alex`
 
 • Password: `S3cretP@s3`
 
-Getting the First Flag
+---
 
-With these credentials, I logged in via SSH:
+## 🚀 3. Privilege Escalation
+### 🔍 Identifying the Vector
+
+After logging in via SSH, I audited the sudo permissions for the user `alex`:
 
 ```
 
-ssh alex@<IP_ADDRESS>
+sudo -l
+
+# (ALL : ALL) NOPASSWD: /etc/mp3backups/backup.sh
 
 ```
 
-I found the first flag in `user.txt`! User Flag: `flag{1_hop3_y0u_ke3p_th3_arch1v3s_saf3}`
+Analysis of `backup.sh` revealed that the `-c` flag allowed for arbitrary command execution due to insufficient input validation.
 
-4. Becoming "Root" (Privilege Escalation)
-In Linux, the "root" user has total control. I checked what special powers Alex had using `sudo -l`. It turns out Alex can run a script called `backup.sh` as root without a password.
+### 🔓 Gaining Root Shell
 
-The Flaw: I looked at the code of `backup.sh` and noticed it was poorly written. It takes a command from the user and runs it directly. This is called Command Injection.
-
-The Trick: I told the script to change the permissions of the system terminal (`/bin/bash`) so that I could run it as a superuser:
+I exploited the Command Injection vulnerability to set the SUID bit on `/bin/bash`, allowing for an easy escalation to root:
 
 ```
 
 sudo /etc/mp3backups/backup.sh -c 'chmod +s /bin/bash'
 
-```
-
-Then I simply ran:
-
-```
-
 /bin/bash -p
 
 ```
 
-Now I am the root user! I headed to the `/root` folder to get the final flag. Root Flag: `flag{Than5s_f0r_play1ng_H0p£_y0u_enJ053d}`
+Status: Root access obtained.
 
-5. Lessons Learned
-• Don't leave backups public: Anyone can download them and try to crack them.
+---
 
-• Weak passwords are dangerous: "Squidward" is easy to crack. Use complex ones!
+## 🏁 4. Conclusion & Key Takeaways
+### 🔐 Security Lessons
 
-• Secure your scripts: If a script runs as root, it must be very careful about how it handles user input.
+• Information Leakage: Sensitive directories like `/etc` should never be accessible via a web server.
 
-Happy Hacking!
+• Weak Credential Management: Archive passwords must be complex to resist dictionary-based cracking.
+
+• Insecure Code Execution: Custom scripts running with `sudo` must never execute user-supplied input directly.
+
+---
+
+✍️ Author: Akira Hasuo
+
+📘 Created for educational and portfolio purposes only
