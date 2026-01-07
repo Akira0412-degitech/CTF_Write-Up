@@ -267,4 +267,6 @@ b53a02f55b57d4439e3341834d70c062
 - `base64`
 - `7z`, `strings`, `exiftool`
 
+✍️ Author: Akira Hasuo
 
+📘 Created for educational and portfolio purposes only
