@@ -146,13 +146,25 @@ id
 ---
 
 ## 🧠 Key Takeaways
-1. Broken Access Control: Relying solely on client-side cookies for authentication is insecure.
+1. Broken Access Control
+The Issue: The application relied on client-side cookies for authentication without server-side validation. By simply setting the SessionToken to admin, the system assumed the user was an administrator. This is like giving someone a key and letting them rewrite the lock's code themselves.
 
-2. Insecure File Permissions: Critical system files like `/etc/hosts` must never be world-writable.
+The Fix: Authentication should always be handled server-side using unpredictable, random Session IDs. User roles and permissions must be stored in a secure database or server-side session store, never directly in a cookie that a user can manipulate.
 
-3. Implicit Trust in DNS: Using hostnames in root-level cron jobs without verifying the source creates a massive attack vector.
+2. Insecure File Permissions
+The Issue: /etc/hosts being world-writable (-rw-rw-rw-) was the fatal flaw. Critical system files that dictate OS behavior should only be editable by the root user. This allowed an unprivileged user (James) to redirect system-wide traffic.
 
-4. Credential Hygiene: Encrypting keys with weak passwords only provides a false sense of security.
+The Fix: Adhere to the Principle of Least Privilege. Critical files like /etc/hosts or /etc/passwd should be set to 644 (-rw-r--r--), meaning only the owner can write while others can only read. Regular security audits using tools like LinPEAS should be conducted to find such misconfigurations.
+
+3. Implicit Trust in DNS
+The Issue: A root-level cron job used a hostname (overpass.thm) rather than a hardcoded IP or a secure connection. Since the hostname's "identity" could be spoofed via the writable /etc/hosts file, the system was tricked into executing code from an attacker's machine.
+
+The Fix: For automated internal tasks, especially those running with root privileges, use static local IP addresses or implement checksum/digital signature verification for any script before execution. Never trust a source based solely on its hostname in a sensitive environment.
+
+4. Credential Hygiene
+The Issue: Encrypting an RSA key with a weak password (james13) provides a false sense of security. If a password can be cracked in seconds using a standard wordlist like rockyou.txt, the encryption is effectively useless.
+
+The Fix: Use strong, complex passphrases for SSH keys. Furthermore, sensitive files like private keys or development backups should never be stored in web-accessible directories (like /downloads), as this exposes them to external enumeration.
 
 ---
 
