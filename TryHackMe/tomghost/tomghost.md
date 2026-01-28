@@ -1,65 +1,146 @@
-# 🕵️ tomghost: Penetration Testing Report
+# 🛡️ TryHackMe – Tomghost
 
-## 1. Enumeration Phase: Identifying the Entry Point
-The assessment began with a full port scan to map the target's attack surface.
+Full Technical Walkthrough & Root Compromise Report
 
-* **Scanning with Rustscan**:
-  By running `$ rustscan -a <Target_IP> -- -sV`, I identified standard ports like 22 (SSH) and 8080 (HTTP), but the presence of port **8009 (AJP)** was the key outlier.
-* **Vulnerability Research**:
-  Seeing an unusual port like AJP led me to search for known exploits using `searchsploit`:
-  `$ searchsploit tomcat ajp`
-  This confirmed the server was likely vulnerable to **Ghostcat (CVE-2020-1938)**, a file inclusion vulnerability.
+## 📌 Overview
 
----
+Room Name: Tomghost
 
-## 2. Initial Access: Exploiting Ghostcat
-With a specific vulnerability in mind, I moved to exploit the AJP service to extract sensitive configuration files.
+Platform: TryHackMe
 
-* **Execution & Debugging**:
-  The exploit script required manual modification to run in a Python 3 environment. I patched the communication logic with `.decode('utf-8')` to handle the data stream correctly.
-  `$ python3 48143.py <Target_IP>`
-* **Credential Recovery**:
-  The exploit successfully read the internal `web.xml` file, which leaked cleartext credentials:
-  - User: **skyfuck**
-  - Pass: **8730281lkjlkjdqlksalks**
-* **Access**:
-  I established the first foothold by logging in via SSH:
-  `$ ssh skyfuck@<Target_IP>`
+Difficulty: Easy
 
----
+Category: Apache Tomcat / AJP Protocol / PGP Cracking / Misconfigured Sudo
 
-## 3. Privilege Escalation Discovery: Lateral Movement
-Once inside, I needed to escalate my privileges, but the initial user `skyfuck` was heavily restricted.
+This machine walks through a multi-stage exploitation path starting from an exposed AJP port, leveraging the Ghostcat vulnerability (CVE-2020-1938) to gain initial access, followed by offline PGP cracking for lateral movement, and finally escalating privileges through a misconfigured zip binary in the sudoers file.
 
-* **Local Enumeration**:
-  A check with `$ sudo -l` revealed that `skyfuck` had no sudo permissions. However, a manual search of the home directory uncovered two critical PGP files: `tryhackme.asc` (Private Key) and `credential.pgp` (Encrypted Data).
-* **Cracking the PGP Passphrase**:
-  Since the private key was password-protected, I moved the file to my local machine for offline cracking:
-  1. Extract hash: `$ gpg2john tryhackme.asc > hash`
-  2. Brute-force: `$ john --wordlist=/usr/share/wordlists/rockyou.txt hash`
-  The password was identified as **"alexandru"**.
-* **Decryption & User Pivot**:
-  Using the cracked passphrase, I decrypted the data to reveal the credentials for the next user, **merlin**:
-  - Pass: **asuyusdoiuqoilkda312j31k2j123j1g23g12k3g12kj3gk12jg3k12j3kj123j**
-  I then switched users via `$ su merlin` and captured the User Flag.
+## 🔍 1. Enumeration Phase
 
----
+To begin, I ran a full port scan using Rustscan to map out the services running on the target system.
 
-## 4. Exploitation: Final Ascent to Root
-Operating as `merlin`, I performed a final check for system misconfigurations.
+```bash
+rustscan -a <target_ip> -- -sV
+```
 
-* **Binary Misconfiguration**:
-  Running `$ sudo -l` again revealed a high-risk entry:
-  `(root : root) NOPASSWD: /usr/bin/zip`
-* **Root Shell via GTFOBins**:
-  The `zip` command can execute arbitrary programs during its "test" phase. I leveraged this to spawn a root shell:
-  `$ sudo zip /tmp/pwn.zip /etc/hosts -T -TT '/bin/sh #'`
-* **Completion**:
-  The command granted a shell with effective UID 0. I confirmed my identity with `whoami` and retrieved the final flag from `/root/root.txt`.
+The scan revealed SSH on port 22, an Apache Tomcat web service on port 8080, and more importantly, an uncommon open port: 8009, which was identified as the Apache JServ Protocol (AJP).
 
----
+Given the relationship between AJP and Tomcat, and knowing that AJP is not typically exposed externally, I suspected a possible misconfiguration. This prompted a vulnerability check using searchsploit:
 
-## 💡 Key Takeaways
-1. **Unusual Ports Matter**: The discovery of port 8009 (AJP) was the catalyst for the entire breach. Standard ports often lead to dead ends; outliers lead to exploits.
-2. **Offline Cracking is Powerful**: Protecting a secret with PGP is only as secure as the passphrase. Using `john` allowed for a silent, high-speed attack without alerting the server.
-3. **Sudoers Misconfiguration**: Granting sudo rights to a binary like `zip` is dangerous because many utilities have "escape" features that can spawn shells. Always follow the principle of least privilege (PoLP).
+```bash
+searchsploit tomcat ajp
+```
+
+This search returned the Ghostcat vulnerability (CVE-2020-1938), which allows attackers to read arbitrary files from the Tomcat server via the AJP service.
+
+## 🔓 2. Initial Access
+
+I then used a public Ghostcat exploit to attempt reading sensitive files from the server. The original exploit was written in Python 2, so I modified it slightly for Python 3 (e.g., adding .decode('utf-8') where needed):
+
+```bash
+python3 48143.py <target_ip>
+```
+
+This script successfully retrieved the contents of the WEB-INF/web.xml file, from which I extracted hardcoded credentials:
+
+• Username: skyfuck  
+• Password: 8730281lkjlkjdqlksalks
+
+I used these credentials to log in via SSH:
+
+```bash
+ssh skyfuck@<target_ip>
+```
+
+A shell was obtained with this user.
+
+## 🚀 3. Privilege Escalation Discovery
+
+After gaining a foothold, I checked the user's sudo permissions:
+
+```bash
+sudo -l
+```
+
+This returned nothing of interest—skyfuck had no sudo privileges. I began manually inspecting the user’s home directory and discovered two files:
+
+• `tryhackme.asc` – a GPG private key  
+• `credential.pgp` – an encrypted file
+
+It seemed likely that the private key could be used to decrypt credential.pgp, so I copied the key to my local machine and prepared to crack it offline.
+
+Using gpg2john to extract the key's hash, and john with the rockyou wordlist, I attempted to recover the passphrase:
+
+```bash
+gpg2john tryhackme.asc > hash
+john --wordlist=/usr/share/wordlists/rockyou.txt hash
+```
+
+The passphrase was cracked successfully as: alexandru
+
+I imported the key and decrypted the PGP file:
+
+```bash
+gpg --import tryhackme.asc
+gpg --decrypt credential.pgp
+```
+
+The decrypted content revealed another set of credentials:
+
+• Username: merlin  
+• Password: asuyusdoiuqoilkda312j31k2j123j1g23g12k3g12kj3gk12jg3k12j3kj123j
+
+I switched users with:
+
+```bash
+su merlin
+```
+
+At this point, I captured the user flag.  
+user.txt: `THM{GhostCat_1s_so_cr4sy}`
+
+## 🛠️ 4. Exploitation (Root Privilege Escalation)
+
+As the user merlin, I once again checked for sudo permissions:
+
+```bash
+sudo -l
+```
+
+This time, the output showed:
+
+```text
+(root : root) NOPASSWD: /usr/bin/zip
+```
+
+According to GTFOBins, the zip utility can be abused to execute arbitrary commands when using the -T (test) and -TT options. Since it could be run with root privileges, this presented a direct path to privilege escalation.
+
+I executed the following command to spawn a root shell:
+
+```bash
+sudo zip /tmp/pwn.zip /etc/hosts -T -TT '/bin/sh #'
+```
+
+Then confirmed my privilege level:
+
+```bash
+whoami
+
+root
+
+```
+
+I accessed /root/root.txt to retrieve the root flag.
+root.txt: `THM{Z1P_1S_FAKE}`
+
+## 🧠 Key Takeaways
+
+Unusual Ports Lead to Unusual Vulnerabilities
+Discovering AJP on port 8009 was the initial pivot point. Investigating this rarely-used port led to Ghostcat, which ultimately enabled the entire attack chain.
+
+Offline Cracking Is a Silent But Powerful Technique
+Exporting and cracking the GPG key locally avoided triggering alarms and allowed lateral movement with minimal noise.
+
+Misconfigured Sudo Permissions Are Dangerous
+Allowing sudo access to tools like zip—even if seemingly benign—can lead to full system compromise. Every binary in sudo should be vetted for potential abuse via GTFOBins or equivalent.
+
+✍️ Author: Akira Hasuo
