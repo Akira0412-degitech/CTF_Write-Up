@@ -1,7 +1,13 @@
-# 🛡️ TryHackMe – ChillHack - Writeup ---
+# 🛡️ TryHackMe – ChillHack - Writeup 
 
 
 ## 📌 Overview
+Room Name: Chill Hack
+
+Platform: TryHackMe
+
+Difficulty: Easy
+
 ChillHack is a comprehensive Capture The Flag (CTF) machine that covers a broad spectrum of penetration testing phases, including web vulnerability exploitation, internal network enumeration (SSH tunneling), steganography, and privilege escalation through misconfigured system groups.
 
 ---
