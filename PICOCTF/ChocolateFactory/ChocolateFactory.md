@@ -1,4 +1,4 @@
-# 🛡️ TryHackMe – Chocolate Factory - Writeup
+﻿# 🛡️ TryHackMe – Chocolate Factory - Writeup
 
 ## 📌 Overview
 **Room Name:** Chocolate Factory  
@@ -92,7 +92,7 @@ The `$6$` prefix indicated that this was a **SHA-512 crypt** hash.
 I used `hashcat` to crack the extracted password hash for `charlie`.
 
 - **Username:** `charlie`
-- **Recovered Password:** `cn7824`
+- **Recovered Password:** `[REDACTED]`
 
 This gave me valid credentials to continue the attack chain.
 
@@ -117,10 +117,6 @@ charlie
 ```
 
 At this stage, I retrieved the user flag:
-
-```text
-flag{cd5509042371b34e4826e4838b522d2e}
-```
 
 ---
 
@@ -163,48 +159,6 @@ This was a binary, but when analyzed, it revealed the Fernet key:
 ```
 
 After fixing `root.py` slightly so that it handled bytes correctly, I used the key to decrypt the encrypted message and recovered the root flag:
-
-```text
-flag{cec59161d338fef787fcb4e296b42124}
-```
-
----
-
-## 🏁 9. Flags
-### User Flag
-```text
-flag{cd5509042371b34e4826e4838b522d2e}
-```
-
-### Root Flag
-```text
-flag{cec59161d338fef787fcb4e296b42124}
-```
-
----
-
-## 🔗 10. Attack Chain Summary
-The full attack path was:
-
-```text
-Port Scan
-→ Web login page investigation
-→ FTP anonymous access
-→ Download gum_room.jpg
-→ Steghide extraction
-→ Base64 decode
-→ Recover /etc/shadow contents
-→ Crack charlie’s SHA-512 hash
-→ Gain access as www-data
-→ Discover charlie’s RSA private key (teleport)
-→ SSH login as charlie
-→ Abuse sudo vi misconfiguration
-→ Become root
-→ Analyze key_rev_key
-→ Recover Fernet key
-→ Decrypt root.py token
-→ Obtain root flag
-```
 
 ---
 
