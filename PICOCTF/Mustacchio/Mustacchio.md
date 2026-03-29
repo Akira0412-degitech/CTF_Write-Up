@@ -3,7 +3,7 @@
 ## 📌 Overview
 **Room Name:** Mustacchio  
 **Platform:** TryHackMe  
-**Difficulty:** Easy/Medium
+**Difficulty:** Easy
 
 Mustacchio is a highly educational machine that covers several core penetration testing concepts, including enumeration, database analysis, XXE (XML External Entity) attacks, SSH key cracking, and final-stage privilege escalation using PATH Injection.
 
@@ -49,7 +49,7 @@ Using `hash-identifier`, I determined the hash was SHA-1. I then used `hashcat` 
 ---
 
 ## 🌐 3. Web Exploitation (XXE)
-With the cracked password, I logged into the admin panel running on port 8765. Inside the panel, there was an "Add a comment" input form. By inspecting the source code, I found comments indicating that this form processed XML.
+With the cracked password, I logged into the admin panel running on port `8765`. Inside the panel, there was an `Add a comment` input form. By inspecting the source code, I found comments indicating that this form processed XML.
 
 Realizing it was vulnerable to XXE, I crafted a payload to extract Barry's SSH private key.
 
@@ -75,6 +75,12 @@ The extracted SSH key was protected by a passphrase. To crack it, I converted th
 
 After successfully cracking the passphrase, I used the key to log in via SSH as `barry`. From there, I stabilized my interactive shell using Python and began internal enumeration.
 
+At this point, I was able to read the user flag:
+
+```bash
+cat user.txt
+# [REDACTED]
+```
 ---
 
 ## 🚀 5. Privilege Escalation: barry → root
@@ -101,6 +107,11 @@ export PATH=/tmp:$PATH
 ```
 
 When the binary ran, it executed my fake `/tmp/tail` with root privileges instead of the real `tail` command. This instantly granted me a root shell. Finally, I read the `/root/root.txt` flag to complete the room.
+
+```bash
+cat /root/root.txt
+# [REDACTED]
+```
 
 ---
 
