@@ -41,7 +41,7 @@ ffuf -u http://lookup.thm/login.php \
 -X POST \
 -d "username=FUZZ&password=test" \
 -H "Content-Type: application/x-www-form-urlencoded" \
--w /usr/share/metasploit-framework/data/wordlists/namelist.txt 
+-w /usr/share/metasploit-framework/data/wordlists/namelist.txt
 ```
 
 **Result:** Found a valid username: `jose`
@@ -222,18 +222,15 @@ Finally, I authenticated as `root` via SSH:
 ssh -i id_rsa root@10.49.154.238
 ```
 
-**ROOT ACCESS GRANTED.** I was then able to read the final `root.txt` flag.
+**ROOT ACCESS GRANTED.** ✅ I was then able to read the final `root.txt` flag.
 
----
 
-## 📚 Key Takeaways
+## 📚 KEY TAKEAWAYS
 
-- 🚨 **Improper Error Handling:** The login page returning a specific "Wrong password" error instead of a generic "Invalid credentials" message enabled easy username enumeration.
 - 🔓 **Outdated Software:** Running vulnerable, outdated versions of third-party plugins like elFinder (CVE-2021-32682 / Command Injection) provides a direct vector for remote code execution.
 - 🛠️ **Relative Paths in SUID Binaries:** Using relative paths (like calling `id` instead of `/usr/bin/id`) inside an SUID binary opens the door for PATH Injection/Hijacking, allowing privilege escalation and lateral movement.
 - 🔑 **Sudo Misconfigurations:** Allowing users to run utilities like `look` as root without restrictions can inadvertently grant arbitrary file read access, leading to a full system compromise.
 
----
 
 ## 📚 Credit 
 ✍️ Author: Akira Hasuo
