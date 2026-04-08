@@ -14,7 +14,7 @@ The attack chain involves:
 • Password Brute-forcing
 • Remote Code Execution (exploiting vulnerable elFinder)
 • Lateral Movement via PATH Hijacking (Custom SUID binary)
-• Privilege Escalation via misconfigured `sudo` (`look` utility)
+• Privilege Escalation via misconfiguration. 
 
 ---
 
