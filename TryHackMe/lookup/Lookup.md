@@ -3,9 +3,18 @@
 ## 📌 Overview
 **Room Name:** Lookup  
 **Platform:** TryHackMe  
-**Difficulty:** easy  
+**Difficulty:** Easy  
+**Category:** Web Exploitation / Brute-forcing / SUID & Sudo Exploitation
 
-The Lookup machine features an attack chain that starts with web-based username enumeration leveraging differential login error messages. This is followed by a password brute-force attack to gain access to an internal sub-domain hosting a vulnerable version of elFinder. Exploiting this yields a reverse shell. Privilege escalation involves analyzing a custom SUID binary (`pwm`) to perform PATH hijacking, extracting SSH passwords for lateral movement to the `think` user. Finally, a misconfigured `sudo` permission on the `look` utility is abused to read the root SSH private key and achieve full system compromise.
+Lookup is a Linux-based machine that tests a variety of penetration testing skills, ranging from initial web exploitation to local privilege escalation. The room highlights the dangers of improper error handling, outdated third-party software, and insecure system configurations.
+
+The attack chain involves:
+
+• Username Enumeration via differential login errors
+• Password Brute-forcing
+• Remote Code Execution (exploiting vulnerable elFinder)
+• Lateral Movement via PATH Hijacking (Custom SUID binary)
+• Privilege Escalation via misconfigured `sudo` (`look` utility)
 
 ---
 
