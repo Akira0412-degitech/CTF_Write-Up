@@ -48,6 +48,38 @@ git pull origin main
 - `docs:` ドキュメント
 - `chore:` 設定・雑務
 
+## 📄 Writeup追加時のルール
+
+新しいwriteupを追加した場合、**必ずREADME.mdも同じコミットで更新すること。**
+
+### README.mdの更新手順
+1. 対応するプラットフォームのテーブル（TryHackMe / Hack The Box / picoCTF / OverTheWire）を探す
+2. 以下の形式で行を追加する：
+
+**TryHackMe / Hack The Box:**
+```
+| [ルーム名](相対パス/ファイル名.md) | Easy/Medium/Hard | カテゴリ | 主要な手法1, 手法2, 手法3 |
+```
+
+**picoCTF:**
+```
+| [チャレンジ名](相対パス/ファイル名.md) | カテゴリ | 主要な手法 |
+```
+
+**OverTheWire:**
+```
+| [Level X → Y](相対パス/ファイル名.md) | 主要な手法 |
+```
+
+3. テーブルはアルファベット順に並べる
+
+### 例
+```
+| [Teams](TryHackMe/Teams/Teams.md) | Easy | Web / LFI / PrivEsc | vhost enumeration, LFI, writable cron script |
+```
+
+---
+
 ## ⚠️ 禁止事項
 - mainブランチへの直接コミット
 - `git push --force` (originとずれた場合はreset --hardで解決)
