@@ -6,6 +6,16 @@
 3. `git reset --hard origin/main`  # 常にoriginと完全一致させる
 4. ブランチ作成: `git checkout -b claude/[作業内容]-$(date +%Y%m%d)`
 
+> **⚠️ Worktree環境の場合:**
+> `git checkout main` は親ディレクトリがすでに `main` を使用しているためエラーになる。
+> 代わりに以下で origin/main に追いつく:
+> ```bash
+> git fetch origin
+> git rebase origin/main
+> git checkout -b claude/[作業内容]-$(date +%Y%m%d)
+> ```
+> mainの最新化（作業終了時）も `git checkout main` の代わりに親ディレクトリで `git pull origin main` を実行する。
+
 ## ✅ 作業終了時（必ず実行）
 1. `git add -A`
 2. `git commit -m "[prefix]: [変更内容の説明]"`
