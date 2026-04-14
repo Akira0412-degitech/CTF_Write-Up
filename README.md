@@ -21,6 +21,7 @@ Each write-up follows a consistent structure: reconnaissance â†’ exploitation â†
 | Room | Difficulty | Category | Key Techniques |
 |------|-----------|----------|----------------|
 | [Agent Sudo](TryHackMe/AgentSudo/AgentSudo.md) | Easy | Steganography / CVE | User-Agent manipulation, steghide, CVE-2019-14287 |
+| [BricksHeist](TryHackMe/BricksHeist/BricksHeist.md) | Easy | WordPress / RCE / Forensics | CVE-2024-25600 (Bricks Builder RCE), masquerading services, triple-encoded wallet decode, LockBit attribution |
 | [Basic Pentesting](TryHackMe/BasicPentesiting/Basic%20Pentesting.md) | Easy | Enumeration / Auth | SMB enumeration, hydra, ssh2john |
 | [Chill Hack](TryHackMe/Chillhack/Chillhack.md) | Easy | Web / PrivEsc | Command injection (Base64 bypass), SQLi, Docker group |
 | [Chocolate Factory](TryHackMe/ChocolateFactory/ChocolateFactory.md) | Easy | Steganography / PrivEsc | steghide, hashcat, vi sudo escape, Fernet decryption |
