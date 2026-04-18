@@ -6,7 +6,7 @@
 **Difficulty:** Easy  
 **Category:** Apache Tomcat / AJP Protocol / GPG Cracking / Privilege Escalation
 
-This machine walks through a multi-stage exploitation path starting from an exposed AJP port, leveraging the Ghostcat vulnerability (CVE-2020-1938) to gain initial access, followed by offline GPG key cracking for lateral movement, and finally escalating privileges through a misconfigured `zip` binary in the sudoers file.
+Linux machine running Apache Tomcat. Ghostcat (CVE-2020-1938) leaks credentials via AJP, GPG key cracking enables lateral movement, and `sudo zip` leads to root.
 
 The attack chain involves:
 

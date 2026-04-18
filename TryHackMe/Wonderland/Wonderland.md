@@ -6,7 +6,7 @@
 **Difficulty:** Medium  
 **Category:** Steganography / Python Library Hijacking / Privilege Escalation
 
-Wonderland is a multi-stage room themed around "Alice in Wonderland". It requires steganography, directory brute-forcing, and a chained privilege escalation journey — moving from Alice to Rabbit, then Hatter, and finally Root — by exploiting relative path vulnerabilities and Linux Capabilities.
+Medium Linux machine themed around Alice in Wonderland. Multi-stage privilege escalation through Python library hijacking, PATH injection, and Linux Capabilities.
 
 The attack chain involves:
 

@@ -6,7 +6,7 @@
 **Difficulty:** Easy  
 **Category:** Web Exploitation / Archive Analysis / Privilege Escalation
 
-This challenge involves web enumeration, hash cracking, and analyzing a Borg Backup repository, ultimately leading to root access via a command injection vulnerability in a custom backup script.
+Linux machine. Exposed password hash and Borg Backup archive on a web server lead to SSH credentials, then root via command injection in a sudo-allowed backup script.
 
 The attack chain involves:
 

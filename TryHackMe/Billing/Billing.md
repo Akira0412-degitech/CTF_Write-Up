@@ -6,7 +6,7 @@
 **Difficulty:** Easy  
 **Category:** Web Exploitation / RCE / Privilege Escalation
 
-Billing is a Linux machine running MagnusBilling, a VoIP billing platform built on top of Asterisk. The attack begins with an unauthenticated RCE vulnerability in MagnusBilling and escalates to root by abusing a misconfigured sudo permission on `fail2ban-client` — a security tool that ironically becomes the path to full system compromise.
+Linux machine running MagnusBilling. Unauthenticated RCE via CVE-2023-30258, escalated to root through a misconfigured `fail2ban-client` sudo entry.
 
 The attack chain involves:
 

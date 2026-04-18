@@ -6,7 +6,7 @@
 **Difficulty:** Easy  
 **Category:** Web Exploitation / XXE / Privilege Escalation
 
-Mustacchio covers several core penetration testing concepts including enumeration, database analysis, XXE (XML External Entity) attacks, SSH key cracking, and privilege escalation via PATH Injection.
+Linux machine. A SQLite backup exposes admin credentials, XXE leaks an SSH private key, and a SUID binary with a relative path call enables PATH injection for root.
 
 The attack chain involves:
 

@@ -6,7 +6,7 @@
 **Difficulty:** Easy  
 **Category:** WordPress / RCE / Forensics / Cryptocurrency Investigation
 
-BricksHeist is a Linux machine that begins with initial access via a known CVE in a WordPress plugin, then shifts into a full internal forensics investigation of a malware-infected system. The challenge requires identifying suspicious services, decoding a triple-encoded wallet address hidden in a config file, and attributing the attack to a ransomware group via OSINT.
+WordPressマシン（Bricks Builder）。CVE-2024-25600で初期侵入後、マルウェア感染システムのフォレンジクス調査を行い、ランサムウェアグループをOSINTで特定する。
 
 Attack chain overview:
 
