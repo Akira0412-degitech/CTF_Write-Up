@@ -6,7 +6,7 @@
 **Difficulty:** Easy  
 **Category:** WordPress / RCE / Forensics / Cryptocurrency Investigation
 
-WordPressマシン（Bricks Builder）。CVE-2024-25600で初期侵入後、マルウェア感染システムのフォレンジクス調査を行い、ランサムウェアグループをOSINTで特定する。
+WordPress machine running Bricks Builder. Initial access via CVE-2024-25600, then internal forensics on a malware-infected system to identify masquerading services and attribute the attack to a ransomware group via OSINT.
 
 Attack chain overview:
 
