@@ -6,7 +6,7 @@
 **Difficulty:** Easy  
 **Category:** Web Exploitation / SQLi / Steganography / Privilege Escalation
 
-Chill Hack is a comprehensive machine covering a broad spectrum of penetration testing phases — web vulnerability exploitation, internal network enumeration via SSH tunneling, steganography, and privilege escalation through a misconfigured Docker group.
+Linux machine with a command injection entry point and a multi-stage escalation chain ending with Docker group abuse.
 
 The attack chain involves:
 

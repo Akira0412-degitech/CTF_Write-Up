@@ -6,7 +6,7 @@ Platform: Hack The Box
 
 Difficulty: Easy 
 
-TwoMillion is a celebratory machine marking Hack The Box reaching two million users  . The challenge involves bypassing invite code mechanics, exploiting API vulnerabilities for RCE, and performing a kernel-level privilege escalation on Ubuntu 22.04.
+HTB anniversary machine. Invite code bypass and API abuse lead to RCE, then root via OverlayFS kernel exploit (CVE-2023-0386).
 
 ---
 

@@ -6,7 +6,7 @@
 **Difficulty:** Easy  
 **Category:** Web Exploitation / Brute-forcing / SUID & Sudo Exploitation
 
-Lookup is a Linux-based machine that tests a variety of penetration testing skills, ranging from initial web exploitation to local privilege escalation. The room highlights the dangers of improper error handling, outdated third-party software, and insecure system configurations.
+Linux machine. User enumeration and brute force for initial access, RCE via an outdated elFinder instance, lateral movement via PATH hijacking, and root via `sudo look`.
 
 The attack chain involves:
 

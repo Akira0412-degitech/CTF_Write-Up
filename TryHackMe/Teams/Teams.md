@@ -6,7 +6,7 @@
 **Difficulty:** Easy  
 **Category:** Web Exploitation / LFI / Misconfiguration / Privilege Escalation
 
-Teams is a Linux machine that walks through a full attack chain from web enumeration to initial access and privilege escalation. A combination of credentials accidentally left behind by a developer, improper file permissions, and a misconfigured cron job leads to complete system compromise.
+Linux machine. LFI on a dev subdomain exposes an SSH private key embedded in `sshd_config`. Input injection and a writable cron script lead to root.
 
 Attack chain overview:
 

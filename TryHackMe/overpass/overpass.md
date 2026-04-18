@@ -6,7 +6,7 @@
 **Difficulty:** Easy  
 **Category:** Web / Authentication Bypass / Cryptography / Cron Job Exploitation
 
-This machine highlights a series of common security oversights — from weak web authentication to insecure file permissions and cron job manipulation.
+Linux machine. Cookie manipulation grants admin access, and a world-writable `/etc/hosts` allows DNS poisoning of a root cron job for privilege escalation.
 
 The attack chain involves:
 

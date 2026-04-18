@@ -6,7 +6,7 @@
 **Difficulty:** Easy  
 **Category:** Steganography / Hash Cracking / Privilege Escalation / Cryptography
 
-Chocolate Factory is a beginner-friendly CTF machine covering service enumeration, anonymous FTP access, steganography, password hash cracking, SSH key abuse, sudo misconfiguration, and final-stage decryption using a Fernet key.
+Linux machine featuring anonymous FTP, steganography to extract a shadow hash, and a sudo `vi` shell escape, with a final Fernet decryption challenge.
 
 The attack chain involves:
 
