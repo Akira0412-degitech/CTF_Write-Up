@@ -27,6 +27,7 @@ Each write-up follows a consistent structure: reconnaissance â†’ exploitation â†
 | [Chill Hack](TryHackMe/Chillhack/Chillhack.md) | Easy | Web / PrivEsc | Command injection (Base64 bypass), SQLi, Docker group |
 | [Chocolate Factory](TryHackMe/ChocolateFactory/ChocolateFactory.md) | Easy | Steganography / PrivEsc | steghide, hashcat, vi sudo escape, Fernet decryption |
 | [Cyborg](TryHackMe/Cyborg/cyborg.md) | Easy | Backup / PrivEsc | Borg Backup extraction, command injection in backup script |
+| [Dogcat](TryHackMe/Dogcat/Dogcat.md) | Medium | Web / LFI / Docker | php://filter LFI, log poisoning RCE, sudo env, Docker escape via cron |
 | [Lookup](TryHackMe/lookup/Lookup.md) | Easy | Web / PrivEsc | User enumeration, elFinder RCE (CVE-2021-32682), PATH hijacking, sudo look |
 | [Mustacchio](TryHackMe/Mustacchio/Mustacchio.md) | Easy | Web / PrivEsc | SQLite analysis, XXE attack, ssh2john, PATH injection |
 | [Overpass](TryHackMe/overpass/overpass.md) | Easy | Web / PrivEsc | Cookie manipulation, SSH key cracking, DNS poisoning, cron exploitation |
