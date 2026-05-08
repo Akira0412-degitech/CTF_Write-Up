@@ -31,6 +31,7 @@ Each write-up follows a consistent structure: reconnaissance â†’ exploitation â†
 | [Jack-of-All-Trades](TryHackMe/JackOfAllTrades/JackOfAllTrades.md) | Easy | Web / Steganography / Brute Force / PrivEsc | Non-standard ports, multi-layer encoding (Base32/Hex/ROT13), steghide, Hydra SSH, SUID strings |
 | [Lian_Yu](TryHackMe/Lian_Yu/Lian_Yu.md) | Easy | Web / Steganography / FTP / PrivEsc | Base58 decode, FTP enumeration, PNG magic byte repair, stegseek, sudo pkexec |
 | [Lookup](TryHackMe/lookup/Lookup.md) | Easy | Web / PrivEsc | User enumeration, elFinder RCE (CVE-2021-32682), PATH hijacking, sudo look |
+| [Madness](TryHackMe/Madness/Madness.md) | Easy | Web / Steganography / PrivEsc | Magic byte repair, secret brute-force, steghide, ROT13, CVE-2017-5618 (screen 4.5.0) |
 | [Mustacchio](TryHackMe/Mustacchio/Mustacchio.md) | Easy | Web / PrivEsc | SQLite analysis, XXE attack, ssh2john, PATH injection |
 | [Overpass](TryHackMe/overpass/overpass.md) | Easy | Web / PrivEsc | Cookie manipulation, SSH key cracking, DNS poisoning, cron exploitation |
 | [Relevant](TryHackMe/Relevant/Relevant.md) | Medium | Windows / SMB / IIS / PrivEsc | Anonymous SMB, Base64 creds, SMB-to-webroot shell upload, SeImpersonatePrivilege, PrintSpoofer |
