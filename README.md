@@ -21,6 +21,7 @@ Each write-up follows a consistent structure: reconnaissance â†’ exploitation â†
 | Room | Difficulty | Category | Key Techniques |
 |------|-----------|----------|----------------|
 | [Agent Sudo](TryHackMe/AgentSudo/AgentSudo.md) | Easy | Steganography / CVE | User-Agent manipulation, steghide, CVE-2019-14287 |
+| [Anonymous](TryHackMe/Anonymous/Anonymous.md) | Medium | FTP / SMB / Cron / PrivEsc | Anonymous FTP, world-writable cron script hijacking, SUID env |
 | [BricksHeist](TryHackMe/BricksHeist/BricksHeist.md) | Easy | WordPress / RCE / Forensics | CVE-2024-25600 (Bricks Builder RCE), masquerading services, triple-encoded wallet decode, LockBit attribution |
 | [Basic Pentesting](TryHackMe/BasicPentesiting/Basic%20Pentesting.md) | Easy | Enumeration / Auth | SMB enumeration, hydra, ssh2john |
 | [Billing](TryHackMe/Billing/Billing.md) | Easy | Web / CVE / PrivEsc | CVE-2023-30258 (MagnusBilling RCE), fail2ban-client sudo abuse |
