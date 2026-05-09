@@ -14,8 +14,8 @@ Attack chain overview:
 - SMB `BillySMB` investigated and eliminated as rabbit hole (stego decoys)
 - `wpscan` enumerates users `kwheel`, `bjoel`; hydra cracks `kwheel:cutiepie1`
 - CVE-2019-8942 via Metasploit `wp_crop_rce` → shell as `www-data`
-- `/home/bjoel/user.txt` is a decoy; real user flag at `/media/usb/user.txt`
 - SUID `/usr/sbin/checker` → `strings` reveals `getenv("admin")` → root
+- `find` as root reveals `/media/usb/user.txt`; `/home/bjoel/user.txt` is a decoy
 
 ---
 
@@ -200,32 +200,7 @@ whoami
 
 ---
 
-## 🔍 6. Locating user.txt (Decoy Awareness)
-
-```bash
-find / -name "user.txt" 2>/dev/null
-```
-
-```text
-/home/bjoel/user.txt
-/media/usb/user.txt
-```
-
-```bash
-cat /home/bjoel/user.txt
-# → "You won't find what you're looking for here. TRY HARDER"
-
-cat /media/usb/user.txt
-# → c8421899aae571f7af486492b71a8ab7
-```
-
-The flag in `/home/bjoel/` is an intentional decoy. The real user flag is mounted on a USB device at `/media/usb/`.
-
-**User flag captured.** ✅
-
----
-
-## 👑 7. Privilege Escalation: www-data → root
+## 👑 6. Privilege Escalation: www-data → root
 
 ### SUID Enumeration
 
@@ -284,6 +259,33 @@ whoami
 cat /root/root.txt
 # → 9a0b2b618bef9bfa7ac28c1353d9f318
 ```
+
+---
+
+## 🔍 7. Locating user.txt (requires root)
+
+Running `find` as `www-data` only returned `/home/bjoel/user.txt` — `/media/usb/` was not accessible to the web server user. After escalating to root, the same search revealed the second path:
+
+```bash
+find / -name="user.txt" 2>/dev/null
+```
+
+```text
+/home/bjoel/user.txt
+/media/usb/user.txt
+```
+
+```bash
+cat /home/bjoel/user.txt
+# → "You won't find what you're looking for here. TRY HARDER"
+
+cat /media/usb/user.txt
+# → c8421899aae571f7af486492b71a8ab7
+```
+
+`/home/bjoel/user.txt` is an intentional decoy. The real flag is on a USB device mounted at `/media/usb/`, which requires root-level access to read.
+
+**User flag captured.** ✅
 
 ---
 
