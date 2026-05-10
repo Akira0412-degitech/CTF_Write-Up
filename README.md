@@ -39,7 +39,7 @@ Each write-up follows a consistent structure: reconnaissance → exploitation �
 | [Relevant](TryHackMe/Relevant/Relevant.md) | Medium | Windows / SMB / IIS / PrivEsc | Anonymous SMB, Base64 creds, SMB-to-webroot shell upload, SeImpersonatePrivilege, PrintSpoofer |
 | [Teams](TryHackMe/Teams/Teams.md) | Easy | Web / LFI / PrivEsc | vhost enumeration, LFI, SSH key in sshd_config, writable cron script |
 | [Tomghost](TryHackMe/tomghost/tomghost.md) | Easy | CVE / PrivEsc | Ghostcat (CVE-2020-1938), GPG key cracking, zip GTFOBins |
-| [UltraTech](TryHackMe/UltraTech/UltraTech.md) | Medium | Web / Command Injection / Hash Cracking | robots.txt recon, api.js endpoint discovery, backtick command injection, SQLite hash extraction, hashcat MD5 |
+| [UltraTech](TryHackMe/UltraTech/UltraTech.md) | Medium | Web / Command Injection / Hash Cracking / Docker | robots.txt recon, api.js endpoint discovery, backtick command injection, SQLite hash extraction, hashcat MD5, docker group abuse |
 | [Wgel CTF](TryHackMe/Wgel/Wgel.md) | Easy | Web / PrivEsc | SSH key discovery, sudo wget → /etc/passwd overwrite |
 | [Wonderland](TryHackMe/Wonderland/Wonderland.md) | Medium | Steganography / PrivEsc | stegseek, Python library hijacking, Linux Capabilities (perl) |
 

