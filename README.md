@@ -26,6 +26,7 @@ Each write-up follows a consistent structure: reconnaissance → exploitation �
 | [Basic Pentesting](TryHackMe/BasicPentesiting/Basic%20Pentesting.md) | Easy | Enumeration / Auth | SMB enumeration, hydra, ssh2john |
 | [Billing](TryHackMe/Billing/Billing.md) | Easy | Web / CVE / PrivEsc | CVE-2023-30258 (MagnusBilling RCE), fail2ban-client sudo abuse |
 | [Blog](TryHackMe/Blog/Blog.md) | Medium | WordPress / CVE / PrivEsc | wpscan user enumeration, hydra brute-force, CVE-2019-8942 (wp_crop_rce), SUID checker strings analysis |
+| [Boiler Room](TryHackMe/BoilerRoom/BoilerRoom.md) | Medium | Web / Command Injection / Multi-layer Encoding / PrivEsc | robots.txt decimal→Base64→MD5, sar2html command injection, non-standard SSH port, SUID find |
 | [Chill Hack](TryHackMe/Chillhack/Chillhack.md) | Easy | Web / PrivEsc | Command injection (Base64 bypass), SQLi, Docker group |
 | [Chocolate Factory](TryHackMe/ChocolateFactory/ChocolateFactory.md) | Easy | Steganography / PrivEsc | steghide, hashcat, vi sudo escape, Fernet decryption |
 | [Cyborg](TryHackMe/Cyborg/cyborg.md) | Easy | Backup / PrivEsc | Borg Backup extraction, command injection in backup script |
