@@ -39,6 +39,7 @@ Each write-up follows a consistent structure: reconnaissance → exploitation �
 | [Overpass](TryHackMe/overpass/overpass.md) | Easy | Web / PrivEsc | Cookie manipulation, SSH key cracking, DNS poisoning, cron exploitation |
 | [Relevant](TryHackMe/Relevant/Relevant.md) | Medium | Windows / SMB / IIS / PrivEsc | Anonymous SMB, Base64 creds, SMB-to-webroot shell upload, SeImpersonatePrivilege, PrintSpoofer |
 | [Teams](TryHackMe/Teams/Teams.md) | Easy | Web / LFI / PrivEsc | vhost enumeration, LFI, SSH key in sshd_config, writable cron script |
+| [Thompson](TryHackMe/Thompson/Thompson.md) | Easy | Apache Tomcat / WAR / Cron / PrivEsc | Manager App credential leak, msfvenom WAR deployment, world-writable cron script, SUID bash |
 | [Tomghost](TryHackMe/tomghost/tomghost.md) | Easy | CVE / PrivEsc | Ghostcat (CVE-2020-1938), GPG key cracking, zip GTFOBins |
 | [UltraTech](TryHackMe/UltraTech/UltraTech.md) | Medium | Web / Command Injection / Hash Cracking / Docker | robots.txt recon, api.js endpoint discovery, backtick command injection, SQLite hash extraction, hashcat MD5, docker group abuse |
 | [Wgel CTF](TryHackMe/Wgel/Wgel.md) | Easy | Web / PrivEsc | SSH key discovery, sudo wget → /etc/passwd overwrite |
