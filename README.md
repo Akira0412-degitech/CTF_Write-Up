@@ -36,6 +36,7 @@ Each write-up follows a consistent structure: reconnaissance â†’ exploitation â†
 | [Lookup](TryHackMe/lookup/Lookup.md) | Easy | Web / PrivEsc | User enumeration, elFinder RCE (CVE-2021-32682), PATH hijacking, sudo look |
 | [Madness](TryHackMe/Madness/Madness.md) | Easy | Web / Steganography / PrivEsc | Magic byte repair, secret brute-force, steghide, ROT13, CVE-2017-5618 (screen 4.5.0) |
 | [Mustacchio](TryHackMe/Mustacchio/Mustacchio.md) | Easy | Web / PrivEsc | SQLite analysis, XXE attack, ssh2john, PATH injection |
+| [Opacity](TryHackMe/Opacity/Opacity.md) | Easy | Web / File Upload / KeePass / PrivEsc | URL fragment extension bypass, PHP shell upload, keepass2john, cron library injection |
 | [Overpass](TryHackMe/overpass/overpass.md) | Easy | Web / PrivEsc | Cookie manipulation, SSH key cracking, DNS poisoning, cron exploitation |
 | [Relevant](TryHackMe/Relevant/Relevant.md) | Medium | Windows / SMB / IIS / PrivEsc | Anonymous SMB, Base64 creds, SMB-to-webroot shell upload, SeImpersonatePrivilege, PrintSpoofer |
 | [Teams](TryHackMe/Teams/Teams.md) | Easy | Web / LFI / PrivEsc | vhost enumeration, LFI, SSH key in sshd_config, writable cron script |
